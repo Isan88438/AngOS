@@ -1,1 +1,0 @@
-tcc -w bootupd.c
