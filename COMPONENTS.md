@@ -3,4 +3,4 @@
 This document lists the major components used by AngOS and explains their purpose within the system.
 
 Bootloader: `tosaithe-main/`
-Also just ignore `pdboot-master/` it will be used in the future.
+We will use `pdboot-master/` as an old legacy BIOS bootloar if planned though currently it sits unused as more of a legacy bios backup.
