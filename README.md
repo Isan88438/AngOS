@@ -16,7 +16,8 @@ AngOS may incorporate software originally developed by other individuals and pro
 AngOS aims to use only software that is either:
 * In the public domain; or
 * Released under the **CC0 1.0 Universal** license.
-This policy is intended to keep the third-party software used by AngOS as unrestricted as possible while allowing the AngOS project to maintain its own licensing.
+
+This policy is intended to keep the third-party software used by AngOS to be allowed to be put under the AngOS license.
 
 ## Contributions
 
