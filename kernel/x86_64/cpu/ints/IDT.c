@@ -1,7 +1,6 @@
 #include <types.h>
 #include <syscall.h>
 #include <cpu/IDT.h>
-#include <gfx.h>
 #define INTS 0x30
 
 typedef struct {
@@ -28,8 +27,6 @@ idt_entry IDT[INTS];
 /* A lot of these functions have a ptr argument that isn't used
  * because the compiler requires it to be there :|
  */
-
-__attribute__((no_caller_saved_registers)) void error(const char* format, ...);
 
 __attribute__((interrupt)) void general_fault(void *ptr) {
 	error("General fault RIP :[");
@@ -122,11 +119,11 @@ __attribute__((interrupt)) void page_fault(void *ptr, u64 code) {
 }
 
 __attribute__((interrupt)) void nop_master(void *ptr) {
-	piceoi(FALSE);
+	piceoi(false);
 }
 
 __attribute__((interrupt)) void nop_slave(void *ptr) {
-	piceoi(TRUE);
+	piceoi(true);
 }
 
 void addirq(u8 entry, void *offset, u8 type) {

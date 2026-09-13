@@ -2,7 +2,7 @@ CC := gcc
 AS := gcc
 LD := ld
 
-CFLAGS := -m64 -ffreestanding -fno-stack-protector -Wall -Wextra \
+CFLAGS := -m64 -ffreestanding -fno-stack-protector -mgeneral-regs-only -Wall -Wextra \
           -Ikernel/include \
           -Ikernel/x86_64
 
@@ -15,7 +15,9 @@ KERNEL_C := \
     kernel/x86_64/cpu/ints/IDT.c \
     kernel/x86_64/cpu/ints/PIC.c \
     kernel/x86_64/cpu/ints/timer/PIT.c \
-    kernel/x86_64/memory/paging.c
+    kernel/x86_64/memory/paging.c \
+    kernel/x86_64/syscall/syscall.c \
+    kernel/x86_64/syscall/debug_log.c
 
 KERNEL_ASM := \
     kernel/x86_64/cpu/GDT/GDT.S

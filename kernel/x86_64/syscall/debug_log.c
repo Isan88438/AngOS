@@ -66,7 +66,7 @@ void debug_log(char *format, ...) {
 	va_end(ap);
 }
 
-__attribute__((no_caller_saved_registers)) void error(char *format, ...) {
+void error(const char *format, ...) {
 	/* Same thing as log, just with "no_caller_saved_registers"
 	 * If anyone knows how to dump all of the ... parameters from this function
 	 * into the log function, message me :) */

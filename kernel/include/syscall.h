@@ -12,7 +12,7 @@ void sys_handler(void);
 void enter_userspace(void *RIP, void *RSP);
 
 void debug_log(char *format, ...);
-void error(char *format, ...);
+void error(const char *format, ...);
 void memdump(const void *ptr, size_t count);
 
 unsigned int logs(char *str);
