@@ -123,7 +123,7 @@ void free(void *addr) {
 	}
 	if (!sused) phys_page_free(find_physaddr(addr));
 	if (!eused) phys_page_free(find_physaddr(addr + size - 1));
-	for (int i = 1; i < pages - 1; ++i)
+	for (size_t i = 1; i < pages - 1; ++i)
 		phys_page_free(find_physaddr(addr + i * PAGE_SIZE));
 }
 
