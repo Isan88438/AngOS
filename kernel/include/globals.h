@@ -41,8 +41,8 @@ extern u32 *uheap_bmap;
 extern size_t kheap_bmap_pages;
 extern size_t uheap_bmap_pages;
 
-struct table {
-	u64 entry[512];
-} __attribute__((aligned(4096))) extern pml4;
+extern struct table {
+        u64 entry[512];
+} __attribute__((aligned(4096))) pml4;
 
 #endif
