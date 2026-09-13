@@ -1,7 +1,9 @@
 #ifndef MAIN_H
 #define MAIN_H
+
 #include <types.h>
 #include <memory.h>
+#include <tosaithe.h>
 
 #ifndef CEILING
 #define CEILING(a, b) (((a) + (b) - 1) / (b))
