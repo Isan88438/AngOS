@@ -28,101 +28,104 @@ idt_entry IDT[INTS];
  * because the compiler requires it to be there :|
  */
 
-__attribute__((interrupt)) void general_fault(void *ptr) {
+__attribute__((interrupt)) void general_fault(void *ptr __attribute__((unused))) {
 	error("General fault RIP :[");
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void non_maskable_interrupt(void *ptr) {
+__attribute__((interrupt)) void non_maskable_interrupt(void *ptr __attribute__((unused))) {
 	error("Non-maskable interrupt :|");
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void div_0_fault(void *ptr) {
+__attribute__((interrupt)) void div_0_fault(void *ptr __attribute__((unused))) {
 	error("#DE Divide by 0 error :[");
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void debug_fault(void *ptr) {
+__attribute__((interrupt)) void debug_fault(void *ptr __attribute__((unused))) {
 	error("#DB Debug fault :[");
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void breakpoint_fault(void *ptr) {
+__attribute__((interrupt)) void breakpoint_fault(void *ptr __attribute__((unused))) {
 	error("#BP Breakpoint fault :[");
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void overflow_fault(void *ptr) {
+__attribute__((interrupt)) void overflow_fault(void *ptr __attribute__((unused))) {
 	error("#OF Overflow fault :[");
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void bound_fault(void *ptr) {
+__attribute__((interrupt)) void bound_fault(void *ptr __attribute__((unused))) {
 	error("#BR Bound range exceeded :[");
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void inv_opcode_fault(void *ptr) {
+__attribute__((interrupt)) void inv_opcode_fault(void *ptr __attribute__((unused))) {
 	error("#UD Invalid opcode :[");
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void no_device_fault(void *ptr) {
+__attribute__((interrupt)) void no_device_fault(void *ptr __attribute__((unused))) {
 	error("#NM Device not found :[");
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void double_fault(void *ptr) {
+__attribute__((interrupt)) void double_fault(void *ptr __attribute__((unused))) {
 	error("#DF Double fault :[");
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void inv_tss_fault(void *ptr, u64 code) {
+__attribute__((interrupt)) void inv_tss_fault(void *ptr __attribute__((unused)), u64 code) {
 	error("#TS Invalid TSS :[ CODE: %X", code);
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void no_segment_fault(void *ptr, u64 code) {
+__attribute__((interrupt)) void no_segment_fault(void *ptr __attribute__((unused)), u64 code) {
 	error("#NP Segment not present :[ CODE: %X", code);
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void stack_fault(void *ptr, u64 code) {
-	error("#SS Stack segment fault :[ CODE: %X");
+__attribute__((interrupt)) void stack_fault(
+	void *ptr __attribute__((unused)),
+	u64 code __attribute__((unused))
+) {
+	error("#SS Stack segment fault :[ CODE: %X", code);
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void gp_fault(void *ptr, u64 code) {
+__attribute__((interrupt)) void gp_fault(void *ptr __attribute__((unused)), u64 code) {
 	error("#GP General protection fault :[ CODE: %X", code);
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void page_fault(void *ptr, u64 code) {
+__attribute__((interrupt)) void page_fault(void *ptr __attribute__((unused)), u64 code) {
 	error("#PF Page fault :[ CODE: %X", code);
 	while (1)
 		asm ("hlt");
 }
 
-__attribute__((interrupt)) void nop_master(void *ptr) {
+__attribute__((interrupt)) void nop_master(void *ptr __attribute__((unused))) {
 	piceoi(false);
 }
 
-__attribute__((interrupt)) void nop_slave(void *ptr) {
+__attribute__((interrupt)) void nop_slave(void *ptr __attribute__((unused))) {
 	piceoi(true);
 }
 
