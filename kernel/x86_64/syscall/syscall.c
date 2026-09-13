@@ -1,3 +1,4 @@
+#include <types.h>
 #include <cpu/IO.h>
 
 #define EFER	0xC0000080

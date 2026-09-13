@@ -1,3 +1,4 @@
+#include <syscall.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <cpu/IO.h>

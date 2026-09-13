@@ -83,12 +83,12 @@ void init_tss() {
 
 void init_gdt() {
 	// TODO: Setup actual sections
-	gdtadd(0, 0, 0, FALSE);					// Null			0x00
-	gdtadd(0, 0xFFFFFFFF, 0x9A, TRUE);		// Code			0x08
-	gdtadd(0, 0xFFFFFFFF, 0x92, FALSE);		// Data			0x10
-	gdtadd(0, 0, 0, FALSE);					// User Base	0x18
-	gdtadd(0, 0xFFFFFFFF, 0xF2, FALSE);		// User Data	0x20
-	gdtadd(0, 0xFFFFFFFF, 0xFA, TRUE);		// User Code	0x28
+	gdtadd(0, 0, 0, false);					// Null			0x00
+	gdtadd(0, 0xFFFFFFFF, 0x9A, true);		// Code			0x08
+	gdtadd(0, 0xFFFFFFFF, 0x92, false);		// Data			0x10
+	gdtadd(0, 0, 0, false);					// User Base	0x18
+	gdtadd(0, 0xFFFFFFFF, 0xF2, false);		// User Data	0x20
+	gdtadd(0, 0xFFFFFFFF, 0xFA, true);		// User Code	0x28
 
 //	init_tss();								// TSS			0x30
 
