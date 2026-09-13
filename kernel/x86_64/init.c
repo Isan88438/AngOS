@@ -9,6 +9,7 @@
 #include <types.h>
 #include "init.h"
 #include <syscall.h>
+#include <tosaithe.h>
 
 void init_syscall();
 void *malloc_heap(size_t bytes, int heap);
