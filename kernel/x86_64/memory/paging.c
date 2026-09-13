@@ -14,7 +14,7 @@ void map_page(void *phys, void *virt) {
 	if (!(pml4.entry[pml4_idx] & FLAG_PRESENT)) {
 		void* pdpt_page = phys_page_alloc();
 		memset(pdpt_page, 0, PAGE_SIZE);
-		pml4.entry[pml4_idx] = (u64) pdpt_page & ADDR_MASK | FLAGS;
+		pml4.entry[pml4_idx] = ((u64)pdpt_page & ADDR_MASK) | FLAGS;
 		map_page(pdpt_page, pdpt_page);
 	}
 
@@ -22,7 +22,7 @@ void map_page(void *phys, void *virt) {
 	if (!(pdpt->entry[pdpt_idx] & FLAG_PRESENT)) {
 		void *pd_page = phys_page_alloc();
 		memset(pd_page, 0, PAGE_SIZE);
-		pdpt->entry[pdpt_idx] = (u64) pd_page & ADDR_MASK | FLAGS;
+		pdpt->entry[pdpt_idx] = ((u64)pd_page & ADDR_MASK) | FLAGS;
 		map_page(pd_page, pd_page);
 	}
 
@@ -30,12 +30,12 @@ void map_page(void *phys, void *virt) {
 	if (!(pd->entry[pd_idx] & FLAG_PRESENT)) {
 		void *pt_page = phys_page_alloc();
 		memset(pt_page, 0, PAGE_SIZE);
-		pd->entry[pd_idx] = (u64) pt_page & ADDR_MASK | FLAGS;
+		pd->entry[pd_idx] = ((u64)pt_page & ADDR_MASK) | FLAGS;
 		map_page(pt_page, pt_page);
 	}
 
 	struct table *pt = (void *) (pd->entry[pd_idx] & ADDR_MASK);
-	pt->entry[pt_idx] = (u64) phys & ADDR_MASK | FLAGS;
+	pt->entry[pt_idx] = ((u64)phys & ADDR_MASK) | FLAGS;
 }
 
 void *find_physaddr(void *virt) {
