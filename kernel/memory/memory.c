@@ -189,10 +189,6 @@ void phys_page_free(void *addr) {
 	}
 }
 
-void *get_heap_pages(size_t pages, int heap) {
-
-}
-
 /* Gets *pages* number of physical pages and maps them to *virt* */
 void alloc_and_map(const void *virt, size_t pages) {
 	void *page;
