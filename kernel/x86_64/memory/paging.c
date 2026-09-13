@@ -63,7 +63,6 @@ void *find_physaddr(void *virt) {
 }
 
 void init_paging() {
-	u64 i, j;
 	void *addr1, *addr2;
 
 	/* Clear pml4 */
