@@ -15,12 +15,16 @@ KERNEL_C := \
     kernel/x86_64/cpu/ints/IDT.c \
     kernel/x86_64/cpu/ints/PIC.c \
     kernel/x86_64/cpu/ints/timer/PIT.c \
+    kernel/x86_64/cpu/IO.c \
     kernel/x86_64/memory/paging.c \
     kernel/x86_64/syscall/syscall.c \
-    kernel/x86_64/syscall/debug_log.c
+    kernel/x86_64/syscall/debug_log.c \
+    kernel/memory/memory.c \
+    kernel/disk/PIO.c
 
 KERNEL_ASM := \
-    kernel/x86_64/cpu/GDT/GDT.S
+    kernel/x86_64/cpu/GDT/GDT.S \
+    kernel/x86_64/cpu/ints/timer/PIT.S
 
 KERNEL_OBJS := \
     $(KERNEL_C:kernel/%.c=$(BUILD)/%.o) \

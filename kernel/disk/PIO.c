@@ -4,7 +4,7 @@
 #include <cpu/IO.h>
 #include <syscall.h>
 #include <FS.h>
-#include "FAT.h"
+#include "../fs/FAT.h"
 
 #define PRIMARY	0x1F0
 #define SECOND	0x170

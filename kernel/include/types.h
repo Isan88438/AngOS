@@ -11,5 +11,5 @@ typedef uint32_t u32;
 typedef uint64_t u64;
 
 typedef uint32_t pixel_t;
-
+typedef uint16_t wchar;
 #endif

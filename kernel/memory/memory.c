@@ -1,10 +1,12 @@
 #include <types.h>
-#include <macros.h>
 #include <memory.h>
 #include <string.h>
 #include <globals.h>
 #include "memory.h"
 #include <syscall.h>
+#ifndef CEILING
+#define CEILING(a, b) (((a) + (b) - 1) / (b))
+#endif
 
 /*
 	Allocate virtual memory from a heap
@@ -80,19 +82,19 @@ void free(void *addr) {
 	size = allocations[heap][alloc].size;
 	allocations[heap][alloc].addr = 0;
 	allocations[heap][alloc].size = 0;
-	bool returned = FALSE;
+	bool returned = false;
 	for (int i = 0; i < FREE_SPACES; ++i) {
 		/* Memory is behind freespace */
 		if (addr + size == freespace[heap][i].addr) {
 			freespace[heap][i].addr -= size;
 			freespace[heap][i].size += size;
-			returned = TRUE;
+			returned = true;
 			break;
 		}
 		/* Memory is after freespace */
 		if (addr == freespace[heap][i].addr + freespace[heap][i].size) {
 			freespace[heap][i].size += size;
-			returned = TRUE;
+			returned = true;
 			break;
 		}
 	}
@@ -110,14 +112,14 @@ void free(void *addr) {
 
 	/* Free pages (if there is no other memory in the page) */
 	size_t pages = CEILING((size_t) addr + size, PAGE_SIZE) - (size_t) addr / PAGE_SIZE;
-	bool sused = FALSE, eused = FALSE;
+	bool sused = false, eused = false;
 	for (int i = 0; i < ALLOCATIONS; ++i) {
 		if (((size_t) addr / PAGE_SIZE) * PAGE_SIZE ==
 			(((size_t) allocations[heap][i].addr + allocations[heap][i].size - 1) / PAGE_SIZE) * PAGE_SIZE)
-			sused = TRUE;
+			sused = true;
 		if ((((size_t) addr + size - 1) / PAGE_SIZE) * PAGE_SIZE ==
 			((size_t) allocations[heap][i].addr / PAGE_SIZE) * PAGE_SIZE)
-			eused = TRUE;
+			eused = true;
 	}
 	if (!sused) phys_page_free(find_physaddr(addr));
 	if (!eused) phys_page_free(find_physaddr(addr + size - 1));
