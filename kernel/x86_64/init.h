@@ -3,6 +3,10 @@
 #include <types.h>
 #include <memory.h>
 
+#ifndef CEILING
+#define CEILING(a, b) (((a) + (b) - 1) / (b))
+#endif
+
 typedef struct {
 	memmap_t *memmap;
 	size_t mm_descs;

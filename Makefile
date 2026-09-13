@@ -11,6 +11,7 @@ ASFLAGS := -m64 -ffreestanding
 BUILD := build
 
 KERNEL_C := \
+    kernel/x86_64/init.c \
     kernel/x86_64/cpu/GDT/GDT.c \
     kernel/x86_64/cpu/ints/IDT.c \
     kernel/x86_64/cpu/ints/PIC.c \
@@ -20,7 +21,7 @@ KERNEL_C := \
     kernel/x86_64/syscall/syscall.c \
     kernel/x86_64/syscall/debug_log.c \
     kernel/memory/memory.c \
-    kernel/term/terminal.c
+    kernel/term/terminal. 
 
 KERNEL_ASM := \
     kernel/x86_64/cpu/GDT/GDT.S \

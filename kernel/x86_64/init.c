@@ -66,9 +66,4 @@ void init() {
 	int *addr2 = malloc(sizeof(int) * 5);
 	debug_log("ADDR2: %p\n", addr2);
 //	free(addr);
-
-	fillrect(0,0, fb_w, fb_h, 0xc99eff);
-	for (int i = 0; i <= fb_h; ++i)
-		fillrect(0, 0, i, i, 0x006040);
-	for (;;);
 }
