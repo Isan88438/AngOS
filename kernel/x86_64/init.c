@@ -16,6 +16,7 @@ void *malloc_heap(size_t bytes, int heap);
 void memdump(const void *ptr, size_t count);
 
 void init(tosaithe_loader_data *loader_data) {
+	(void)loader_data;
 	bootinfo_t *bootinfo;
 
 	__asm__ ("movq %%rdi, %0" : "=r"(bootinfo));
