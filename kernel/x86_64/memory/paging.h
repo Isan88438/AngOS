@@ -1,7 +1,6 @@
 #ifndef PAGING_H
 #define PAGING_H
 #include <types.h>
-#include <gfx.h>
 #include <memory.h>
 #include <globals.h>
 

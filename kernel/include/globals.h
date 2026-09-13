@@ -2,7 +2,6 @@
 #define GLOBALS_H
 #include <types.h>
 #include <memory.h>
-#include <gfx.h>
 
 // Defined in main.h
 extern memmap_t *memmap;
