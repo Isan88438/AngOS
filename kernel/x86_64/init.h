@@ -2,8 +2,6 @@
 #define MAIN_H
 #include <types.h>
 #include <memory.h>
-#include <gfx.h>
-#include <macros.h>
 
 typedef struct {
 	memmap_t *memmap;
