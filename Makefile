@@ -26,6 +26,7 @@ KERNEL_C := \
     kernel/x86_64/syscall/debug_log.c \
     kernel/memory/memory.c \
     kernel/term/terminal.c
+    kernel/libc/string.c
 
 KERNEL_ASM := \
     kernel/x86_64/cpu/GDT/GDT.S \
