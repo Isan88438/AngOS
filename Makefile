@@ -29,7 +29,8 @@ KERNEL_C := \
 
 KERNEL_ASM := \
     kernel/x86_64/cpu/GDT/GDT.S \
-    kernel/x86_64/cpu/ints/timer/PIT.S
+    kernel/x86_64/cpu/ints/timer/PIT.S \
+    kernel/x86_64/memory/paging.asm
 
 KERNEL_C_OBJS := $(KERNEL_C:kernel/%.c=$(BUILD)/%.o)
 
