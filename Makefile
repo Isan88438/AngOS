@@ -57,5 +57,9 @@ $(BUILD)/%_asm.o: kernel/%.S
 	@mkdir -p $(dir $@)
 	$(AS) $(ASFLAGS) -c $< -o $@
 
+$(BUILD)/%_asm.o: kernel/%.asm
+	@mkdir -p $(dir $@)
+	nasm -f elf64 $< -o $@
+
 clean:
 	rm -rf $(BUILD)
