@@ -23,16 +23,31 @@ This policy is intended to keep the third-party software used by AngOS to be all
 
 ## Contributions
 
-Contributions to AngOS are welcome.
+Contributions to AngOS are always welcome! (and recommended) 
 By submitting original work to AngOS, contributors agree that their contributions may be incorporated into AngOS and distributed under the AngOS project's license. Contributors grant AngOS permission to use, modify, combine, monetize, and redistribute their contributions as part of the project.
 Contributors must not submit code copied or derived from another project unless that code is compatible with AngOS's third-party software policy and the contributor has the necessary rights to submit it.
-
-## Contributing
 
 Before contributing code derived from another project, please verify that:
 1. The project's license is compatible with AngOS's third-party software policy.
 2. You have the right to submit the code.
 3. By contributing the code to AngOS, you agree that it may be distributed under the AngOS license.
+
+AngOS is being built from the ground up, and we're looking for people interested in operating systems and low-level programming. You don't need to be an OS expert.
+
+If you are stuck on what to help with, here are some ideas:
+- Kernel development
+- Bootloader development
+- Memory management
+- Interrupts and hardware support
+- Drivers
+- Filesystems
+- Networking
+- Shell development
+- Build system improvements
+- Documentation
+- Testing on real hardware
+- Bug reports
+(practically anything!)
 
 ## Disclaimer
 
