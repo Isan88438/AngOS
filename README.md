@@ -6,7 +6,7 @@ The goal of AngOS is to create a complete and usable operating system by combini
 
 ## Current Status
 
-> 🚧 **Early Development** AngOS is currently being built from the ground up. Its architecture, APIs, project structure, and features are expected to change frequently during development.
+> 🚧 **Early development,** AngOS is currently being built from the ground up. Its architecture, APIs, project structure, and features are expected to change frequently during development.
 
 ## Third-Party Software
 
