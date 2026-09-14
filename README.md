@@ -4,23 +4,21 @@
 
 The goal of AngOS is to create a complete and usable operating system by combining original AngOS code with carefully selected open-source components and software developed by other contributors.
 
+---
+
 ## Current Status
 
 > 🚧 **Early development,** AngOS is currently being built from the ground up. Its architecture, APIs, project structure, and features are expected to change frequently during development.
 
-## Third-Party Software
+---
 
-AngOS may incorporate software originally developed by other individuals and projects. These components may be modified, adapted, or integrated into AngOS to meet the project's technical requirements.
+## Contributing
 
-AngOS aims to use only software that is either:
-* In the public domain.
-* Released under the **CC0 1.0 Universal (CC0)** license.
-* Released under the **The Unlicense** license.
-* Released under the **Zero Clause BSD (0BSD)** license.
-* Released under the **MIT No Attribution (MIT-0)**
+Please check out CONTRIBUTING.md to learn how to contribute!
 
-This policy is intended to keep the third-party software used by AngOS to be allowed to be put under the AngOS license.
+All contributions are welcomed!
 
+---
 ## Disclaimer
 
 AngOS is experimental software under active development.
