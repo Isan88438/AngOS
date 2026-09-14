@@ -14,7 +14,7 @@ AngOS is an independent operating system project with the goal to develop usable
 
 Please check out CONTRIBUTING.md to learn how to contribute!
 
-All contributions are welcomed!
+All contributions not matter how big or small are welcomed!
 
 ---
 ## Disclaimer
