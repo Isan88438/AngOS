@@ -6,16 +6,18 @@ The goal of AngOS is to create a complete and usable operating system by combini
 
 ## Current Status
 
-> 🚧 **Early development — not yet usable as a general-purpose operating system.**
-AngOS is currently being built from the ground up. Its architecture, APIs, project structure, and features are expected to change frequently during development.
+> 🚧 **Early development,** AngOS is currently being built from the ground up. Its architecture, APIs, project structure, and features are expected to change frequently during development.
 
 ## Third-Party Software
 
 AngOS may incorporate software originally developed by other individuals and projects. These components may be modified, adapted, or integrated into AngOS to meet the project's technical requirements.
 
 AngOS aims to use only software that is either:
-* In the public domain; or
-* Released under the **CC0 1.0 Universal** license.
+* In the public domain.
+* Released under the **CC0 1.0 Universal (CC0)** license.
+* Released under the **The Unlicense** license.
+* Released under the **Zero Clause BSD (0BSD)** license.
+* Released under the **MIT No Attribution (MIT-0)**
 
 This policy is intended to keep the third-party software used by AngOS to be allowed to be put under the AngOS license.
 
