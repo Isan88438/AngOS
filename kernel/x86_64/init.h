@@ -43,7 +43,7 @@ typedef struct {
 	u32 Reserved;
 } EFI_TABLE_HEADER;
 
-typedef struct {
+typedef struct { 
 	EFI_TABLE_HEADER Hdr;
 	EFI_STATUS (*GetTime)();
 	EFI_STATUS (*SetTime)();
