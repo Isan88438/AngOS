@@ -23,11 +23,6 @@ void init(tosaithe_loader_data *loader_data) {
     fb_h = loader_data->framebuffer_height;
     fb_pixperline = loader_data->framebuffer_pitch;
 
-	bootinfo_t *bootinfo;
-
-	__asm__ ("movq %%rdi, %0" : "=r"(bootinfo));
-	init_globals(bootinfo);
-
 	debug_log(
 	"GLOBALS:\n"
 	"memmap: %p\n"
