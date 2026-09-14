@@ -5,7 +5,7 @@ flushregs:
 	pushq $0x8
 	movabsq $flush, %rax
 	pushq %rax
-	retfq
+	lretq
 flush:
 	movw $0x10, %ax
 	movw %ax, %ds
