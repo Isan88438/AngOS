@@ -10,6 +10,13 @@ CFLAGS := --target=$(TARGET) -m64 -ffreestanding -fno-stack-protector -mgeneral-
           -Ikernel/include \
           -Ikernel/x86_64
 
+CFLAGS := --target=$(TARGET) -m64 -mcmodel=kernel -mno-red-zone \
+          -ffreestanding -fno-stack-protector -mgeneral-regs-only \
+          -fno-asynchronous-unwind-tables -fno-unwind-tables \
+          -Wall -Wextra \
+          -Ikernel/include \
+          -Ikernel/x86_64
+
 ASFLAGS := --target=$(TARGET) -m64 -ffreestanding
 
 BUILD := build
