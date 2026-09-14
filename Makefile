@@ -1,14 +1,16 @@
-CC := gcc
-AS := gcc
-LD := ld
+CC := clang
+AS := clang
+LD := ld.lld
 
-CFLAGS := -m64 -ffreestanding -fno-stack-protector -mgeneral-regs-only \
+TARGET := x86_64-unknown-elf
+
+CFLAGS := --target=$(TARGET) -m64 -ffreestanding -fno-stack-protector -mgeneral-regs-only \
           -fno-asynchronous-unwind-tables -fno-unwind-tables \
           -Wall -Wextra \
           -Ikernel/include \
           -Ikernel/x86_64
 
-ASFLAGS := -m64 -ffreestanding
+ASFLAGS := --target=$(TARGET) -m64 -ffreestanding
 
 BUILD := build
 KERNEL := $(BUILD)/AngOS.elf
@@ -51,7 +53,7 @@ all: $(KERNEL)
 
 $(KERNEL): $(KERNEL_OBJS) kernel/linker.ld
 	@mkdir -p $(dir $@)
-	$(LD) -nostdlib -T kernel/linker.ld $(KERNEL_OBJS) -o $@
+	$(LD) -m elf_x86_64 -nostdlib -T kernel/linker.ld $(KERNEL_OBJS) -o $@
 
 $(BUILD)/%.o: kernel/%.c
 	@mkdir -p $(dir $@)
