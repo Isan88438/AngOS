@@ -53,7 +53,7 @@ void init(tosaithe_loader_data *loader_data) {
 	}
 
 	init_gdt();
-	init_memory();
+	/* init_memory(); */
 	init_idt();
 	init_timer();
 //	init_disk();
