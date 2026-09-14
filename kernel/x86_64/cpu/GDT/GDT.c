@@ -1,6 +1,5 @@
 #include <types.h>
 #include <memory.h>
-#include <string.h>
 
 #define ENTRIES 8
 
