@@ -3,6 +3,7 @@
 **Version 1.0**
 
 Copyright © 2026 AngOS Project / Ethan Angstetra
+
 All rights reserved except as expressly granted below.
 
 ## 1. Definitions
