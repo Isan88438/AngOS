@@ -12,6 +12,7 @@ BUILD := build
 
 KERNEL_C := \
     kernel/x86_64/init.c \
+    kernel/x86_64/entry.c \
     kernel/x86_64/cpu/GDT/GDT.c \
     kernel/x86_64/cpu/ints/IDT.c \
     kernel/x86_64/cpu/ints/PIC.c \
