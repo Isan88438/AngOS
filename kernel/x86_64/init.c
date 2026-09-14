@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <FS.h>
 #include <stdio.h>
 #include <cpu/GDT.h>
 #include <cpu/IO.h>
