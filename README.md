@@ -1,8 +1,6 @@
 # AngOS
 
-**AngOS** is an independent operating system project for x86-64 computers.
-
-The goal of AngOS is to create a complete and usable operating system by combining original AngOS code with carefully selected open-source components and software developed by other contributors.
+AngOS is an independent operating system project with the goal to develop usable operating system by combining original AngOS code with carefully selected open-source components and software developed by other contributors.
 
 ---
 
