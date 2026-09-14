@@ -39,3 +39,12 @@ Before contributing code derived from another project, please verify that:
 
 AngOS is experimental software under active development.
 It may contain bugs, incomplete features, security issues, and breaking changes. **Do not rely on AngOS for important data, critical systems, or production use.**
+
+                                        
+  ▄▄▄▄                 ▄▄▄▄▄    ▄▄▄▄▄▄▄ 
+▄██▀▀██▄             ▄███████▄ █████▀▀▀ 
+███  ███ ████▄ ▄████ ███   ███  ▀████▄  
+███▀▀███ ██ ██ ██ ██ ███▄▄▄███    ▀████ 
+███  ███ ██ ██ ▀████  ▀█████▀  ███████▀ 
+                  ██                    
+                ▀▀▀                      
