@@ -2,8 +2,6 @@
 
 Thank you for your interest in contributing to **AngOS**!
 
-AngOS is an independent operating system project with the goal to develop usable operating system by combining original AngOS code with carefully selected open-source components and software developed by other contributors.
-
 You **do not need to be an OS expert** to contribute. If you're interested in operating systems, low-level programming, or simply want to learn, you're welcome to contribute!
 
 ---
