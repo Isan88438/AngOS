@@ -1,27 +1,36 @@
-ENTRY(init)
+ENTRY(angos_entry)
 
 SECTIONS
 {
-	. = 0x1000000000;
+    . = 0xFFFFFFFF80000000;
 
-	.text BLOCK(4K): ALIGN(4K)
-	{
-		*(.text)
-	}
+    .text ALIGN(0x1000) : ALIGN(0x1000)
+    {
+        KEEP(*(.tsbp))
+        *(.text.entry)
+        *(.text .text.*)
+    }
 
-	.data BLOCK(4K): ALIGN(4K)
-	{
-		*(.data)
-	}
+    .rodata ALIGN(0x1000) :
+    {
+        *(.rodata .rodata.*)
+    }
 
-	.rodata BLOCK(4K): ALIGN(4K)
-	{
-		*(.rodata)
-	}
+    .data ALIGN(0x1000) :
+    {
+        *(.data .data.*)
+    }
 
-	.bss BLOCK(4K): ALIGN(4K)
-	{
-		*(COMMON)
-		*(.bss)
-	}
+    .bss ALIGN(0x1000) :
+    {
+        *(COMMON)
+        *(.bss .bss.*)
+    }
+
+    /DISCARD/ :
+    {
+        *(.comment)
+        *(.note*)
+        *(.eh_frame*)
+    }
 }
