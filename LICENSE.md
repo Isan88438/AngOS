@@ -2,7 +2,7 @@
 
 **Version 1.0**
 
-Copyright © 2026 AngOS Project / Isan88438
+Copyright © 2026 AngOS Project / Ethan Angstetra
 
 All rights reserved except as expressly granted below.
 
@@ -90,7 +90,7 @@ If you do not agree to these terms, you are not granted permission to use, modif
 
 **AngOS License Version 1.0**
 
-Copyright © 2026 AngOS Project / Isan88438
+Copyright © 2026 AngOS Project / Ethan Angstetra
 
 All rights reserved except as expressly granted by this License.
  
