@@ -34,8 +34,12 @@ KERNEL_OBJS := \
 
 .PHONY: all clean
 
-all: $(KERNEL_OBJS)
-	@echo "Kernel objects compiled successfully."
+KERNEL := build/AngOS.elf
+
+.PHONY: all clean
+
+all: $(KERNEL)
+	@echo "Kernel linked successfully: $(KERNEL)"
 
 $(BUILD)/%.o: kernel/%.c
 	@mkdir -p $(dir $@)
