@@ -35,8 +35,8 @@ KERNEL_ASM := \
 KERNEL_C_OBJS := $(KERNEL_C:kernel/%.c=$(BUILD)/%.o)
 
 KERNEL_ASM_OBJS := \
-    $(patsubst kernel/%.S,$(BUILD)/%_asm.o,$(KERNEL_ASM)) \
-    $(patsubst kernel/%.asm,$(BUILD)/%_asm.o,$(KERNEL_ASM))
+    $(patsubst kernel/%.S,$(BUILD)/%_asm.o,$(filter %.S,$(KERNEL_ASM))) \
+    $(patsubst kernel/%.asm,$(BUILD)/%_asm.o,$(filter %.asm,$(KERNEL_ASM)))
 
 KERNEL_OBJS := \
     $(KERNEL_C_OBJS) \
