@@ -4,10 +4,9 @@
 #include <uefi.h>
 #include <uefi-media-file.h>
 
-#include <memory>
-#include <string>
 
-#include <cstddef>
+#include <stdint.h>
+#include <stddef.h>
 
 extern EFI_BOOT_SERVICES *EBS;
 extern EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *EFI_con_out;
@@ -75,132 +74,169 @@ inline void *locate_protocol(const EFI_GUID &guid)
     return interface_ptr;
 }
 
-// deleter for efi_page_alloc
-class efi_page_deleter
+// Owned EFI page allocation.
+class efi_page_alloc
 {
+    EFI_PHYSICAL_ADDRESS address_ = 0;
+    UINTN pages_ = 0;
+
 public:
-    using pointer = std::pair<EFI_PHYSICAL_ADDRESS, UINTN>;
+    efi_page_alloc() {}
 
-    void operator()(pointer v)
+    ~efi_page_alloc()
     {
-        EBS->FreePages(v.first, v.second);
-    }
-};
-
-// Owned page allocation. This is a unique_ptr implementation (in fact, subclass) for page allocations.
-// It tracks both the address and size of the allocation.
-class efi_page_alloc : public std::unique_ptr<void, efi_page_deleter>
-{
-public:
-    efi_page_alloc() noexcept {}
-
-    // allocate pages at the specified (page-aligned) address
-    void allocate(EFI_PHYSICAL_ADDRESS address, UINTN num_pages)
-    {
-        if (!allocate_nx(address, num_pages)) {
-            throw std::bad_alloc();
+        if (address_ != 0 && pages_ != 0) {
+            EBS->FreePages(address_, pages_);
         }
     }
 
-    // allocate pages at the specified address, non-throwing (return true if successful)
-    bool allocate_nx(EFI_PHYSICAL_ADDRESS address, UINTN num_pages) noexcept
+    efi_page_alloc(const efi_page_alloc &) = delete;
+    efi_page_alloc &operator=(const efi_page_alloc &) = delete;
+
+    // allocate pages at the specified address
+    bool allocate_nx(EFI_PHYSICAL_ADDRESS address, UINTN num_pages)
     {
-        EFI_STATUS status = EBS->AllocatePages(AllocateAddress, EfiLoaderCode, num_pages, &address);
+        EFI_STATUS status =
+            EBS->AllocatePages(
+                AllocateAddress,
+                EfiLoaderCode,
+                num_pages,
+                &address
+            );
+
         if (EFI_ERROR(status)) {
             return false;
         }
 
-        reset(std::make_pair(address, num_pages));
+        address_ = address;
+        pages_ = num_pages;
         return true;
+    }
+
+    void allocate(EFI_PHYSICAL_ADDRESS address, UINTN num_pages)
+    {
+        allocate_nx(address, num_pages);
     }
 
     // allocate pages at any address
-    void allocate(UINTN num_pages) { if (!allocate_nx(num_pages)) throw std::bad_alloc(); }
-
-    // allocate pages at any address, non-throwing (return true if successful)
-    bool allocate_nx(UINTN num_pages) noexcept
+    bool allocate_nx(UINTN num_pages)
     {
-        EFI_PHYSICAL_ADDRESS address;
-        EFI_STATUS status = EBS->AllocatePages(AllocateAnyPages, EfiLoaderCode, num_pages, &address);
+        EFI_PHYSICAL_ADDRESS address = 0;
+
+        EFI_STATUS status =
+            EBS->AllocatePages(
+                AllocateAnyPages,
+                EfiLoaderCode,
+                num_pages,
+                &address
+            );
+
         if (EFI_ERROR(status)) {
             return false;
         }
 
-        reset(std::make_pair(address, num_pages));
+        address_ = address;
+        pages_ = num_pages;
         return true;
     }
 
-    // extend allocation (without moving) by the given number of pages, non-throwing
-    bool extend_nx(UINTN num_pages) noexcept
+    void allocate(UINTN num_pages)
     {
-        UINTN origPages = get().second;
-        EFI_PHYSICAL_ADDRESS address = get().first + origPages * 4096u;
-        EFI_STATUS status = EBS->AllocatePages(AllocateAddress, EfiLoaderCode, num_pages, &address);
+        allocate_nx(num_pages);
+    }
+
+    // Extend allocation without moving it.
+    bool extend_nx(UINTN num_pages)
+    {
+        if (address_ == 0 || pages_ == 0) {
+            return false;
+        }
+
+        EFI_PHYSICAL_ADDRESS address =
+            address_ + pages_ * 4096u;
+
+        EFI_STATUS status =
+            EBS->AllocatePages(
+                AllocateAddress,
+                EfiLoaderCode,
+                num_pages,
+                &address
+            );
+
         if (EFI_ERROR(status)) {
             return false;
         }
-        rezone(get().first, origPages + num_pages);
+
+        pages_ += num_pages;
         return true;
     }
 
-    // extend allocation by the given number of pages, relocate if necessary,
-    // throws std::bad_alloc on failure
-    void extend_or_move(UINTN num_pages)
+    void rezone(EFI_PHYSICAL_ADDRESS address, UINTN num_pages)
     {
-        if (!extend_nx(num_pages)) {
-            UINTN new_total_pages = get().second + num_pages;
-            EFI_PHYSICAL_ADDRESS new_address;
-            EFI_STATUS status = EBS->AllocatePages(AllocateAnyPages, EfiLoaderCode, new_total_pages, &new_address);
-            if (EFI_ERROR(status)) {
-                throw std::bad_alloc();
-            }
-            reset(std::make_pair(new_address, new_total_pages));
+        address_ = address;
+        pages_ = num_pages;
+    }
+
+    UINTN page_count() const
+    {
+        return pages_;
+    }
+
+    EFI_PHYSICAL_ADDRESS get_ptr() const
+    {
+        return address_;
+    }
+};
+
+
+// // Owning EFI_FILE_PROTOCOL handle.
+class efi_file_handle
+{
+    EFI_FILE_PROTOCOL *handle_ = nullptr;
+
+public:
+    efi_file_handle() {}
+
+    explicit efi_file_handle(EFI_FILE_PROTOCOL *handle)
+        : handle_(handle)
+    {
+    }
+
+    ~efi_file_handle()
+    {
+        reset(nullptr);
+    }
+
+    efi_file_handle(const efi_file_handle &) = delete;
+    efi_file_handle &operator=(const efi_file_handle &) = delete;
+
+    void reset(EFI_FILE_PROTOCOL *handle)
+    {
+        if (handle_ != nullptr) {
+            handle_->Close(handle_);
         }
+
+        handle_ = handle;
     }
 
-    // change the underlying allocated area, without performing any allocation/free
-    void rezone(EFI_PHYSICAL_ADDRESS address, UINTN num_pages) noexcept
+    EFI_FILE_PROTOCOL *get() const
     {
-        release();
-        reset(std::make_pair(address, num_pages));
+        return handle_;
     }
 
-    UINTN page_count() const noexcept { return get().second; }
-    EFI_PHYSICAL_ADDRESS get_ptr() const noexcept { return get().first; }
-};
-
-// deleter for use by efi_file_handle
-class efi_file_closer
-{
-public:
-    using pointer = EFI_FILE_PROTOCOL *;
-
-    void operator()(pointer v) noexcept
+    EFI_STATUS read(UINTN *read_amount, void *addr)
     {
-        v->Close(v);
+        return handle_->Read(handle_, read_amount, addr);
+    }
+
+    EFI_STATUS seek(UINTN position)
+    {
+        return handle_->SetPosition(handle_, position);
     }
 };
 
-// An owning file handle for EFI_FILE_PROTOCOL-based files.
-class efi_file_handle : public std::unique_ptr<void, efi_file_closer>
-{
-public:
-    using unique_ptr::unique_ptr;
 
-    EFI_STATUS read(UINTN *read_amount, void *addr) noexcept
-    {
-        auto fd = get();
-        return fd->Read(fd, read_amount, addr);
-    }
-
-    EFI_STATUS seek(UINTN position) noexcept
-    {
-        auto fd = get();
-        return fd->SetPosition(fd, position);
-    }
-};
-
-inline void con_write(const CHAR16 *str)
+// inline void con_write(const CHAR16 *str)
 {
     EFI_con_out->OutputString(EFI_con_out, str);
 }
@@ -444,70 +480,5 @@ inline EFI_FILE_INFO *get_file_info(EFI_FILE_PROTOCOL *file)
 
     return buffer;
 }
-
-// Convert UTF-8 input to UCS-2 (16-bit unicode codepoint)
-class utf8toUCS2
-{
-    std::wstring output;
-    unsigned codepoint;
-    unsigned remaining_bytes = 0;
-
-public:
-    void process(char c)
-    {
-        unsigned i = c & 0xFFu;
-        if (remaining_bytes != 0) {
-            if ((i & 0xE0u) != 0xC0) {
-                // encoding error
-                output += L'?';
-                remaining_bytes = 0;
-                return;
-            }
-            codepoint <<= 6;
-            codepoint |= (i & 0x3F);
-            remaining_bytes--;
-            if (remaining_bytes == 0) {
-                // convert codepoint to UCS16
-                if (codepoint >= 0x10000) {
-                    // non-representable codepoint
-                    output += L'?';
-                }
-                else {
-                    output += (wchar_t)codepoint;
-                }
-            }
-            return;
-        }
-
-        if ((i & 0x80u) == 0) {
-            // plain ascii
-            output += (wchar_t)i;
-        } else if ((i * 0xE0u) == 0xC0) {
-            // 2 byte encoding
-            codepoint = i & 0x1F;
-            remaining_bytes = 1;
-        }
-    }
-
-    void process(const char *s)
-    {
-        while (*s != 0) {
-            process(*s);
-            s++;
-        }
-    }
-
-    std::wstring &get_output()
-    {
-        return output;
-    }
-
-    static std::wstring convert(const char *input)
-    {
-        utf8toUCS2 converter;
-        converter.process(input);
-        return converter.get_output();
-    }
-};
 
 #endif /* INCLUDED_TOSAITHE_UTIL_H */

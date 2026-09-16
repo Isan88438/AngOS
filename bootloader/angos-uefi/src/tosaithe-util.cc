@@ -83,14 +83,20 @@ EFI_GRAPHICS_OUTPUT_PROTOCOL *find_GOP()
         goto fallback_locate;
 
     {
-        std::unique_ptr<void> conout_var_val { alloc_pool(conout_var_size) };
-        status = EST->RuntimeServices->GetVariable(L"ConOutDev", &EFI_global_variable_guid, nullptr,
-                &conout_var_size, conout_var_val.get());
-        if (EFI_ERROR(status))
+        void *conout_var_val = alloc_pool(conout_var_size);
+        if (conout_var_val == nullptr)
             goto fallback_locate;
 
+        status = EST->RuntimeServices->GetVariable(L"ConOutDev", &EFI_global_variable_guid, nullptr,
+                &conout_var_size, conout_var_val);
+        if (EFI_ERROR(status)) {
+            free_pool(conout_var_val);
+            goto fallback_locate;
+        }
+
         EFI_HANDLE gop_hndl = nullptr;
-        EFI_DEVICE_PATH_PROTOCOL *con_out_devpath = (EFI_DEVICE_PATH_PROTOCOL *)conout_var_val.get();
+        EFI_DEVICE_PATH_PROTOCOL *con_out_devpath =
+            (EFI_DEVICE_PATH_PROTOCOL *)conout_var_val;
 
         while (true) {
             status = EBS->LocateDevicePath(&EFI_graphics_output_protocol_guid, &con_out_devpath, &gop_hndl);
@@ -98,6 +104,7 @@ EFI_GRAPHICS_OUTPUT_PROTOCOL *find_GOP()
                 void *gop_proto = nullptr;
                 EBS->HandleProtocol(gop_hndl, &EFI_graphics_output_protocol_guid, &gop_proto);
                 // (^^ Shouldn't fail, but if it does, we'll return null anyway)
+                free_pool(conout_var_val);
                 return (EFI_GRAPHICS_OUTPUT_PROTOCOL *)gop_proto;
             }
 
