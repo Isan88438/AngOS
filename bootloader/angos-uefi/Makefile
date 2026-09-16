@@ -28,10 +28,6 @@ CXXPPFLAGS ::= -isysroot $(TOPDIR)/dummy-sysroot -nostdinc++ -isystem $(TOPDIR)/
 export EFICFLAGS CXXFLAGS CXXPPFLAGS CXX
 
 all:
-	@if [ ! -e lib/libcxxabi.a ]; then \
-	    echo "*** libcxxabi.a not present, did you run ./rebuild-libs.sh?"; \
-	    exit 1; \
-	fi
 	$(MAKE) -C src all
 
 lib/libcxxabi.a:
