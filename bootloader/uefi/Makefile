@@ -21,17 +21,13 @@ VIS_HDR ::= -include $(TOPDIR)/include/visibility-header.h
 
 LIBBMCXX_CPPFLAGS ::= -isysroot $(TOPDIR)/dummy-sysroot $(VIS_HDR)
 LIBBMCXX_CXXPPFLAGS ::= -isysroot $(TOPDIR)/dummy-sysroot -nostdinc++ $(VIS_HDR)
-CPPFLAGS ::= -isysroot $(TOPDIR)/dummy-sysroot -isystem "$(TOPDIR)/libbmcxx/include" $(VIS_HDR)
-CXXPPFLAGS ::= -isysroot $(TOPDIR)/dummy-sysroot -nostdinc++ -isystem $(TOPDIR)/libbmcxx/include -I $(TOPDIR)/include \
+CPPFLAGS ::= -isysroot $(TOPDIR)/dummy-sysroot $(VIS_HDR)
+CXXPPFLAGS ::= -isysroot $(TOPDIR)/dummy-sysroot -nostdinc++ -I $(TOPDIR)/include \
     $(VIS_HDR)
 
 export EFICFLAGS CXXFLAGS CXXPPFLAGS CXX
 
 all:
-	@if [ ! -e lib/libcxxabi.a ]; then \
-	    echo "*** libcxxabi.a not present, did you run ./rebuild-libs.sh?"; \
-	    exit 1; \
-	fi
 	$(MAKE) -C src all
 
 lib/libcxxabi.a:
