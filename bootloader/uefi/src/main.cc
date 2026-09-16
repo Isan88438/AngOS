@@ -13,8 +13,8 @@ EFI_STATUS load_tsbp(
     EFI_HANDLE ImageHandle,
     const EFI_DEVICE_PATH_PROTOCOL *exec_path,
     const char *cmdLine,
-    uintptr_t ramdisk,
-    uint64_t ramdisk_size
+    UINTN ramdisk,
+    UINT64 ramdisk_size
 );
 
 static EFI_DEVICE_PATH_PROTOCOL *
