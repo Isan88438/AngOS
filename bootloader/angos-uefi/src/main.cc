@@ -1,5 +1,3 @@
-#include <cstdint>
-#include <cstring>
 
 #include <uefi.h>
 #include <uefi-loadedimage.h>
