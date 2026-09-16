@@ -5,6 +5,16 @@
 
 #include "tosaithe-util.h"
 
+static void copy_memory(void *dst, const void *src, UINTN size)
+{
+    unsigned char *d = (unsigned char *)dst;
+    const unsigned char *s = (const unsigned char *)src;
+
+    while (size--) {
+        *d++ = *s++;
+    }
+}
+
 EFI_BOOT_SERVICES *EBS;
 EFI_SYSTEM_TABLE *EST;
 EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *EFI_con_out;
