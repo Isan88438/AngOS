@@ -4,9 +4,6 @@
 #include <uefi.h>
 #include <uefi-media-file.h>
 
-#include <memory>
-#include <string>
-
 #include <cstddef>
 
 extern EFI_BOOT_SERVICES *EBS;
@@ -73,25 +70,6 @@ inline void *locate_protocol(const EFI_GUID &guid)
     EBS->HandleProtocol(located_handle, &guid, &interface_ptr);
 
     return interface_ptr;
-}
-
-// deleter for unique_ptr and pool allocations
-class efi_pool_deleter
-{
-public:
-    void operator()(void *v)
-    {
-        free_pool(v);
-    }
-};
-
-template <typename T>
-using efi_unique_ptr = std::unique_ptr<T, efi_pool_deleter>;
-
-template <typename T>
-efi_unique_ptr<T> efi_unique_ptr_wrap(T *t)
-{
-    return efi_unique_ptr<T>(t);
 }
 
 // deleter for efi_page_alloc
