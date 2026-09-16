@@ -86,9 +86,9 @@ resolve_relative_path(EFI_HANDLE image_handle, const CHAR16 *path) {
         return nullptr;
     }
 
-    memcpy(new_path, image_path, file_path_offset);
+    copy_memory(new_path, image_path, file_path_offset);
 
-    memcpy(
+    copy_memory(
         (char *)new_path + file_path_offset,
         path_devpath,
         kernel_path_size
