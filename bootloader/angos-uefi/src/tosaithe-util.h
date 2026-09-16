@@ -386,71 +386,22 @@ inline EFI_DEVICE_PATH_PROTOCOL *find_next_devpath_instance(const EFI_DEVICE_PAT
     return (EFI_DEVICE_PATH_PROTOCOL *)(dp_u8 + dpn_end_node_len);
 }
 
-class open_file_exception {
-public:
+struct open_file_error
+{
     enum of_stage {
-        NO_FSPROTOCOL_FOR_DEV_PATH,  // probably does not name a file
+        NO_FSPROTOCOL_FOR_DEV_PATH,
         CANNOT_OPEN_VOLUME,
-        NO_DPTT_PROTOCOL, // firmware lacks DEVICE_PATH_TO_TEXT
-        CANNOT_OPEN_FILE,
+        NO_DPTT_PROTOCOL,
+        CANNOT_OPEN_FILE
     };
 
     of_stage reason;
-    EFI_STATUS status = 0;
-
-    open_file_exception(of_stage reason) : reason(reason) { }
-    open_file_exception(of_stage reason, EFI_STATUS status) : reason(reason), status(status) { }
+    EFI_STATUS status;
 };
 
 // Open a file, specified via devpath; throws open_file_exception on error, std::bad_alloc if out
 // of memory
 EFI_FILE_PROTOCOL *open_file(const EFI_DEVICE_PATH_PROTOCOL *dev_path);
-
-// Switch out the file path part in a device path for another file path.
-// Returned path should be freed via freePool(...).
-// Params:
-//   dp - original device path
-//   new_path - the new file path, with null terminator
-//   new_path_len - length in *bytes*, includes null terminator
-// Throws: std::bad_alloc
-inline EFI_DEVICE_PATH_PROTOCOL *switch_path(const EFI_DEVICE_PATH_PROTOCOL *dp,
-        const CHAR16 *new_path, unsigned new_path_len)
-{
-    unsigned path_offs = find_file_path(dp);
-    unsigned new_node_size = new_path_len + 4;
-    unsigned req_size = path_offs + new_node_size + 4; // terminator node
-
-    unsigned char *allocdBuf = (unsigned char *) alloc_pool(req_size);
-    if (allocdBuf == nullptr) {
-        throw std::bad_alloc();
-    }
-
-    // Copy source up to path_offs
-    unsigned char *srcBuf = (unsigned char *)dp;
-    for (unsigned i = 0; i < path_offs; i++) {
-        allocdBuf[i] = srcBuf[i];
-    }
-
-    // Create new path node
-    allocdBuf[path_offs] = 0x4;
-    allocdBuf[path_offs+1] = 0x4;
-    allocdBuf[path_offs+2] = new_node_size & 0xFFu;
-    allocdBuf[path_offs+3] = (new_node_size >> 8) & 0xFFu;
-
-    srcBuf = (unsigned char *)new_path;
-    for (unsigned i = 0; i < new_path_len; i++) {
-        allocdBuf[path_offs+4 + i] = srcBuf[i];
-    }
-
-    // Add terminator node
-    unsigned terminatorOffs = path_offs + new_node_size;
-    allocdBuf[terminatorOffs] = 0x7Fu;
-    allocdBuf[terminatorOffs+1] = 0xFFu;
-    allocdBuf[terminatorOffs+2] = 4; // length, low byte
-    allocdBuf[terminatorOffs+3] = 0; // length, high byte
-
-    return (EFI_DEVICE_PATH_PROTOCOL *)allocdBuf;
-}
 
 // Get file info. May throw std::bad_alloc.
 inline EFI_FILE_INFO *get_file_info(EFI_FILE_PROTOCOL *file)
@@ -467,7 +418,7 @@ inline EFI_FILE_INFO *get_file_info(EFI_FILE_PROTOCOL *file)
         // bufferSize has now been updated:
         buffer = (EFI_FILE_INFO *) alloc_pool(bufferSize);
         if (buffer == nullptr) {
-            throw std::bad_alloc();
+            return nullptr;
         }
 
         status = file->GetInfo(file, &EFI_file_info_id, &bufferSize, buffer);
