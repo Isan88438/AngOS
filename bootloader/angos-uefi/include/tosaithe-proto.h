@@ -4,7 +4,7 @@
 // Tosaithe boot protocol definitions.
 
 #ifdef __cplusplus
-#include <cstdint>
+#include <stdint.h>
 #else
 #include <stdint.h>
 #endif
