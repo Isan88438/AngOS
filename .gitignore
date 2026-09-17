@@ -1,0 +1,20 @@
+# Build output
+/build/
+
+# QEMU runtime/test files
+/qemu/
+
+# Bootloader build output
+*.o
+*.a
+*.map
+
+# EFI build output
+bootloader/angos-uefi/src/tosaithe.efi
+bootloader/angos-uefi/src/tosaithe.efi.so
+bootloader/angos-uefi/src/tosaithe-stripped.efi.so
+
+# Temporary files
+*.bak
+*.before-*
+*.stl-backup
