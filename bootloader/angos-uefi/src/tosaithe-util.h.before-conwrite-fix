@@ -236,7 +236,7 @@ public:
 };
 
 
-inline void con_write(const CHAR16 *str)
+// inline void con_write(const CHAR16 *str)
 {
     EFI_con_out->OutputString(EFI_con_out, str);
 }

@@ -87,9 +87,9 @@ resolve_relative_path(
         return nullptr;
     }
 
-    __builtin_memcpy(new_path, image_path, file_path_offset);
+    memcpy(new_path, image_path, file_path_offset);
 
-    __builtin_memcpy(
+    memcpy(
         (char *)new_path + file_path_offset,
         path_devpath,
         kernel_path_size
