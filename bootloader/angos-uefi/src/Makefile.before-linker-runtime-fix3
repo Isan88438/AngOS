@@ -11,7 +11,7 @@ endif
 # (Not needed if using primary link method below)
 ELF2EFI64 ?= elf2efi64
 
-LD := ld.lld
+LD ?= ld
 STRIP ?= strip
 
 all: tosaithe.efi
@@ -26,8 +26,8 @@ ifneq ($(USE_ELF2EFI),yes)
 tosaithe.efi: main.o tosaithe-proto.o tosaithe-util.o cxxsupport.o
 	$(LD) -q -nostdlib -Bsymbolic -Bsymbolic-functions -T link-elf.lds \
 	  main.o tosaithe-proto.o tosaithe-util.o cxxsupport.o \
-
-
+	  --eh-frame-hdr \
+	  -L ../lib -lunwind -lcxxabi -lbmcxx \
 	  -Map=tosaithe.efi.so.map -o tosaithe.efi.so
 	$(LD) --strip-all -nostdlib -Bsymbolic \
 	  tosaithe.efi.so \
@@ -42,8 +42,8 @@ else
 tosaithe.efi: main.o tosaithe-proto.o tosaithe-util.o cxxsupport.o
 	$(LD) -q -nostdlib -Bsymbolic -Bsymbolic-functions -T link-elf.lds \
 	  main.o tosaithe-proto.o tosaithe-util.o cxxsupport.o \
-
-
+	  --eh-frame-hdr \
+	  -L ../lib -lunwind -lcxxabi -lbmcxx \
 	  -Map=tosaithe.efi.so.map -o tosaithe.efi.so
 	$(STRIP) --strip-debug -o tosaithe-stripped.efi.so tosaithe.efi.so
 	$(ELF2EFI64) --subsystem=10 tosaithe-stripped.efi.so tosaithe.efi
