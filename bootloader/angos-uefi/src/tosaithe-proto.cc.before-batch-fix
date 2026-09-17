@@ -11,12 +11,11 @@
 #include "cpu-x86_64.h"
 #include "tosaithe-util.h"
 
-extern "C" void abort();
-
 extern EFI_BOOT_SERVICES *EBS;
 extern EFI_SYSTEM_TABLE *EST;
 
 
+template <typename T>
 template <typename T>
 static inline T ang_min(T a, T b)
 {
@@ -45,7 +44,6 @@ static inline int ang_memcmp(const void *a, const void *b, UINTN n)
     return 0;
 }
 
-template <typename T>
 class ang_vector
 {
     T *data_ = nullptr;
@@ -101,11 +99,6 @@ public:
         }
 
         data_[size_++] = value;
-    }
-
-    void emplace_back(const T &value)
-    {
-        push_back(value);
     }
 
     T *begin()
@@ -191,8 +184,7 @@ public:
         uint32_t req_size = sizeof(tsbp_mmap_entry) * capacity_p;
         memmap_entries = (tsbp_mmap_entry *) alloc_pool(req_size);
         if (memmap_entries == nullptr) {
-            abort();
-            return;
+            return nullptr;
         }
         capacity = capacity_p;
     }
@@ -201,8 +193,7 @@ public:
     {
         if (entries == capacity) {
             if (!increase_capacity()) {
-                abort();
-                return;
+                return nullptr;
             }
         }
 
@@ -384,7 +375,7 @@ static void *find_config_table(const EFI_GUID &table_id)
 {
     EFI_CONFIGURATION_TABLE *tables = EST->ConfigurationTable;
     for (UINTN i = 0; i < EST->NumberOfTableEntries; i++) {
-        if (__builtin_memcmp(&tables[i].VendorGuid, &table_id, sizeof(EFI_GUID)) == 0) {
+        if (memcmp(&tables[i].VendorGuid, &table_id, sizeof(EFI_GUID)) == 0) {
             return tables[i].VendorTable;
         }
     }
@@ -910,7 +901,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
             if (phdr.p_offset < first_chunk) {
                 // copy from our initial read rather than re-reading
                 auto copy_size = ang_min(first_chunk - phdr.p_offset, seg_size);
-                __builtin_memcpy((void *)(kernel_alloc.get_ptr() + addr_offs), ((char *)elf_hdr) + phdr.p_offset, copy_size);
+                memcpy((void *)(kernel_alloc.get_ptr() + addr_offs), ((char *)elf_hdr) + phdr.p_offset, copy_size);
                 if (copy_size == seg_size) {
                     do_file_read = false;
                 }
@@ -971,7 +962,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
             // We find the tosaithe entry header at the beginning of the first segment:
             if (ts_entry_header == nullptr && phdr.p_memsz >= sizeof(tosaithe_entry_header)) {
                 void *potential_hdr = (void *)(kernel_alloc.get_ptr() + phdr.p_vaddr - lowest_vaddr);
-                if (__builtin_memcmp(potential_hdr, "TSBP", 4) == 0) {
+                if (memcmp(potential_hdr, "TSBP", 4) == 0) {
                     ts_entry_header = (tosaithe_entry_header *)potential_hdr;
                 }
             }
@@ -1001,7 +992,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
 
     // Zero out bss (parts of segments which have no corresponding file backing)
     for (bss_area bss : bss_areas) {
-        __builtin_memset((void *)(kernel_alloc.get_ptr() + bss.begin_offset - lowest_vaddr), 0, bss.size);
+        memset((void *)(kernel_alloc.get_ptr() + bss.begin_offset - lowest_vaddr), 0, bss.size);
     }
 
 
@@ -1012,7 +1003,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
     UINTN memMapDescrSize = 0;
     uint32_t memMapDescrVersion = 0;
 
-    EFI_MEMORY_DESCRIPTOR * efi_memmap_ptr {
+    efi_unique_ptr<EFI_MEMORY_DESCRIPTOR> efi_memmap_ptr {
             get_efi_memmap(memMapSize, memMapKey, memMapDescrSize, memMapDescrVersion)
         };
 
@@ -1123,7 +1114,7 @@ page_pool_record *page_pool_records = nullptr;
 
         void *r = alloc_pool_next;
         alloc_pool_next = (void *)((uintptr_t)alloc_pool_next + PAGE4KB);
-        __builtin_memset(r, 0, PAGE4KB);
+        memset(r, 0, PAGE4KB);
         return r;
     };
 

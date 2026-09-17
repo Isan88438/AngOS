@@ -6,8 +6,6 @@
 
 
 #include <stdint.h>
-
-extern "C" void abort();
 #include <stddef.h>
 
 extern EFI_BOOT_SERVICES *EBS;
@@ -173,31 +171,6 @@ public:
         return true;
     }
 
-    void extend_or_move(UINTN num_pages)
-    {
-        if (!extend_nx(num_pages)) {
-            UINTN old_pages = page_count();
-            EFI_PHYSICAL_ADDRESS old_address = get_ptr();
-            UINTN new_total_pages = old_pages + num_pages;
-
-            EFI_PHYSICAL_ADDRESS new_address;
-            EFI_STATUS status =
-                EBS->AllocatePages(
-                    AllocateAnyPages,
-                    EfiLoaderCode,
-                    new_total_pages,
-                    &new_address
-                );
-
-            if (EFI_ERROR(status)) {
-                abort();
-            }
-
-            EBS->FreePages(old_address, old_pages);
-            rezone(new_address, new_total_pages);
-        }
-    }
-
     void rezone(EFI_PHYSICAL_ADDRESS address, UINTN num_pages)
     {
         address_ = address;
@@ -249,13 +222,6 @@ public:
     EFI_FILE_PROTOCOL *get() const
     {
         return handle_;
-    }
-
-    EFI_FILE_PROTOCOL *release()
-    {
-        EFI_FILE_PROTOCOL *result = handle_;
-        handle_ = nullptr;
-        return result;
     }
 
     EFI_STATUS read(UINTN *read_amount, void *addr)
