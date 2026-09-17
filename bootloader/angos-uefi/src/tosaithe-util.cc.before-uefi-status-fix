@@ -1,11 +1,5 @@
 #include "tosaithe-util.h"
 
-#ifndef EFI_OUT_OF_RESOURCES
-#define EFI_OUT_OF_RESOURCES ((EFI_STATUS)9)
-#endif
-
-
-
 #include <uefi-devicepath.h>
 #include <uefi-media-file.h>
 
