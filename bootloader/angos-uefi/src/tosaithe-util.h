@@ -404,11 +404,11 @@ EFI_FILE_PROTOCOL *open_file(
     open_file_error *error
 );
 
-// Open a file, specified via devpath; throws open_file_exception on error, std::bad_alloc if out
-// of memory
+// Open a file specified via device path.
+// Returns nullptr on failure and stores the error in the error structure.
 EFI_FILE_PROTOCOL *open_file(const EFI_DEVICE_PATH_PROTOCOL *dev_path);
 
-// Get file info. May throw std::bad_alloc.
+// Get file info. Returns nullptr on failure.
 inline EFI_FILE_INFO *get_file_info(EFI_FILE_PROTOCOL *file)
 {
     UINTN bufferSize = 128;
