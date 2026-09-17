@@ -72,7 +72,7 @@ public:
         uint32_t req_size = sizeof(tsbp_mmap_entry) * capacity_p;
         memmap_entries = (tsbp_mmap_entry *) alloc_pool(req_size);
         if (memmap_entries == nullptr) {
-            throw std::bad_alloc();
+            return nullptr;
         }
         capacity = capacity_p;
     }
@@ -81,7 +81,7 @@ public:
     {
         if (entries == capacity) {
             if (!increase_capacity()) {
-                throw std::bad_alloc();
+                return nullptr;
             }
         }
 
@@ -202,38 +202,52 @@ static bool open_kernel_file(EFI_HANDLE image_handle, const EFI_DEVICE_PATH_PROT
         EFI_FILE_PROTOCOL **kernel_file_p, UINTN *kernel_file_size_p)
 {
     efi_file_handle kernel_file_hndl;
-    const CHAR16 * errmsg;
+    const CHAR16 *errmsg;
 
-    try {
-        kernel_file_hndl.reset(open_file(exec_path));
-    }
-    catch (open_file_exception &ofe) {
-        if (ofe.status == open_file_exception::CANNOT_OPEN_FILE) {
+    open_file_error ofe;
+
+    EFI_FILE_PROTOCOL *opened_file =
+        open_file(exec_path, &ofe);
+
+    if (opened_file == nullptr) {
+        if (ofe.reason == open_file_error::CANNOT_OPEN_FILE) {
             errmsg = OPEN_KERNEL_ERR_FILEOPEN;
         }
-        else if (ofe.status == open_file_exception::CANNOT_OPEN_VOLUME) {
+        else if (ofe.reason == open_file_error::CANNOT_OPEN_VOLUME) {
             errmsg = OPEN_KERNEL_ERR_VOLUME;
         }
-        else if (ofe.status == open_file_exception::NO_DPTT_PROTOCOL) {
+        else if (ofe.reason == open_file_error::NO_DPTT_PROTOCOL) {
             errmsg = OPEN_KERNEL_ERR_FIRMWARE;
         }
-        else /* if (ofe.status == open_file_exception::NO_FSPROTOCOL_FOR_DEV_PATH) */ {
+        else {
             errmsg = OPEN_KERNEL_ERR_FILEOPEN;
         }
+
         goto error_out;
     }
 
+    kernel_file_hndl.reset(opened_file);
+
     {
-        EFI_FILE_INFO *kernel_file_info = get_file_info(kernel_file_hndl.get());
+        EFI_FILE_INFO *kernel_file_info =
+            get_file_info(kernel_file_hndl.get());
+
         if (kernel_file_info == nullptr) {
-            errmsg = OPEN_KERNEL_ERR_FILEOPEN; goto error_out;
+            errmsg = OPEN_KERNEL_ERR_FILEOPEN;
+            goto error_out;
         }
 
-        UINTN kernel_file_size = kernel_file_info->FileSize;
+        UINTN kernel_file_size =
+            kernel_file_info->FileSize;
+
         free_pool(kernel_file_info);
 
-        *kernel_file_p = kernel_file_hndl.release();
-        *kernel_file_size_p = kernel_file_size;
+        *kernel_file_p =
+            kernel_file_hndl.release();
+
+        *kernel_file_size_p =
+            kernel_file_size;
+
         return true;
     }
 
@@ -370,7 +384,7 @@ EFI_MEMORY_DESCRIPTOR *get_efi_memmap(UINTN &memMapSize, UINTN &memMapKey, UINTN
     memMapSize = 16 * sizeof(EFI_MEMORY_DESCRIPTOR);
     EFI_MEMORY_DESCRIPTOR *efiMemMap = (EFI_MEMORY_DESCRIPTOR *) alloc_pool(memMapSize);
     if (efiMemMap == nullptr) {
-        throw std::bad_alloc();
+        return nullptr;
     }
 
     EFI_STATUS status = EBS->GetMemoryMap(&memMapSize, efiMemMap, &memMapKey, &memMapDescrSize, &memMapDescrVersion);
@@ -381,7 +395,7 @@ EFI_MEMORY_DESCRIPTOR *get_efi_memmap(UINTN &memMapSize, UINTN &memMapKey, UINTN
         memMapSize += 4 * memMapDescrSize; // Add a margin for error
         efiMemMap = (EFI_MEMORY_DESCRIPTOR *) alloc_pool(memMapSize);
         if (efiMemMap == nullptr) {
-            throw std::bad_alloc();
+            return nullptr;
         }
         status = EBS->GetMemoryMap(&memMapSize, efiMemMap, &memMapKey, &memMapDescrSize, &memMapDescrVersion);
     }

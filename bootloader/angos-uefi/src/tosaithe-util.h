@@ -399,6 +399,11 @@ struct open_file_error
     EFI_STATUS status;
 };
 
+EFI_FILE_PROTOCOL *open_file(
+    const EFI_DEVICE_PATH_PROTOCOL *dev_path,
+    open_file_error *error
+);
+
 // Open a file, specified via devpath; throws open_file_exception on error, std::bad_alloc if out
 // of memory
 EFI_FILE_PROTOCOL *open_file(const EFI_DEVICE_PATH_PROTOCOL *dev_path);
