@@ -11,7 +11,7 @@ endif
 # (Not needed if using primary link method below)
 ELF2EFI64 ?= elf2efi64
 
-LD := ld.lld
+LD := ld.lld -flavor gnu
 STRIP ?= strip
 
 all: tosaithe.efi
