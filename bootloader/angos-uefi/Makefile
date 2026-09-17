@@ -21,8 +21,8 @@ VIS_HDR ::= -include $(TOPDIR)/include/visibility-header.h
 
 LIBBMCXX_CPPFLAGS ::= -isysroot $(TOPDIR)/dummy-sysroot $(VIS_HDR)
 LIBBMCXX_CXXPPFLAGS ::= -isysroot $(TOPDIR)/dummy-sysroot -nostdinc++ $(VIS_HDR)
-CPPFLAGS ::= -isysroot $(TOPDIR)/dummy-sysroot $(VIS_HDR)
-CXXPPFLAGS ::= -isysroot $(TOPDIR)/dummy-sysroot -nostdinc++ -I $(TOPDIR)/include \
+CPPFLAGS ::= $(VIS_HDR)
+CXXPPFLAGS ::= -nostdinc++ -I $(TOPDIR)/include \
     $(VIS_HDR)
 
 export EFICFLAGS CXXFLAGS CXXPPFLAGS CXX
