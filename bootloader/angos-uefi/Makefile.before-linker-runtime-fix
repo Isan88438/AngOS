@@ -13,7 +13,7 @@ TOPDIR ::= $(PWD)
 EFICFLAGS ::= -ffreestanding -fbuiltin -fshort-wchar -march=x86-64 -mno-red-zone -fno-stack-protector -fno-stack-check -fpie
 #gcc docs say ms-abi may require this, but I've not found that to be the case: -maccumulate-outgoing-args
 CFLAGS ::= -g -Os -Wall
-CXXFLAGS ::= $(CFLAGS) -fno-rtti -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
+CXXFLAGS ::= $(CFLAGS) -fno-rtti
 CXX=g++
 CC=gcc
 
