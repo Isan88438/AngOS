@@ -1020,8 +1020,8 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
         return EFI_LOAD_ERROR;
     }
 
-    sort_efi_memmap(efi_memmap_ptr, memMapSize, memMapDescrSize);
-    compact_efi_memmap(efi_memmap_ptr, memMapSize, memMapDescrSize);
+    sort_efi_memmap(efi_memmap_ptr.get(), memMapSize, memMapDescrSize);
+    compact_efi_memmap(efi_memmap_ptr.get(), memMapSize, memMapDescrSize);
 
     // Allocate memory for page tables
 
@@ -1364,7 +1364,7 @@ page_pool_record *page_pool_records = nullptr;
     static_assert(tsbp_mmap_flags::CACHE_WP == (int)memory_types::CACHE_WP);
     static_assert(tsbp_mmap_flags::CACHE_WT == (int)memory_types::CACHE_WT);
 
-    EFI_MEMORY_DESCRIPTOR *mmdesc = efi_memmap_ptr;
+    EFI_MEMORY_DESCRIPTOR *mmdesc = efi_memmap_ptr.get();
     EFI_MEMORY_DESCRIPTOR *mmdesc_end = (EFI_MEMORY_DESCRIPTOR *)((uintptr_t)mmdesc + memMapSize);
 
     constexpr uint64_t page_attr_writable = 0x2; // writable
@@ -1395,7 +1395,7 @@ page_pool_record *page_pool_records = nullptr;
         auto mmdesc_phys_beg = mmdesc->PhysicalStart;
         auto mmdesc_phys_end = mmdesc->PhysicalStart + mmdesc->NumberOfPages * 4096u;
 
-        if (mmdesc_phys_beg != 0 && mmdesc == efi_memmap_ptr) {
+        if (mmdesc_phys_beg != 0 && mmdesc == efi_memmap_ptr.get()) {
             // Unusual to have nothing mapped at address 0, but let's handle it (we want
             // to ensure the entire first 4GB is mapped regardless of whether there is physical
             // memory present):
@@ -1477,7 +1477,7 @@ page_pool_record *page_pool_records = nullptr;
         // See if there is an existing mapping for the framebuffer. There shouldn't be, but if there does
         // happen to be an overlapping mapping we'll assume that the the memory map entry gives the
         // total size.
-        EFI_MEMORY_DESCRIPTOR *fb_desc = efi_memmap_find(fb_addr, efi_memmap_ptr,
+        EFI_MEMORY_DESCRIPTOR *fb_desc = efi_memmap_find(fb_addr, efi_memmap_ptr.get(),
                 memMapSize, memMapDescrSize);
         if (fb_desc != nullptr) {
             fb_region = fb_desc->PhysicalStart;
@@ -1521,13 +1521,8 @@ page_pool_record *page_pool_records = nullptr;
 
     retrieve_efi_memmap:
 
-    free_pool(efi_memmap_ptr); // free existing map before querying new one
-    efi_memmap_ptr = get_efi_memmap(
-        memMapSize,
-        memMapKey,
-        memMapDescrSize,
-        memMapDescrVersion
-    );
+    efi_memmap_ptr.reset(); // free existing map before querying new one!
+    efi_memmap_ptr.reset(get_efi_memmap(memMapSize, memMapKey, memMapDescrSize, memMapDescrVersion));
 
     if (efi_memmap_ptr == nullptr) {
         return EFI_LOAD_ERROR;
@@ -1545,8 +1540,8 @@ page_pool_record *page_pool_records = nullptr;
     };
 
     // Copy entries from EFI memory map to our boot protocol map
-    auto *efi_mem_iter = efi_memmap_ptr;
-    auto *efi_mem_end = (EFI_MEMORY_DESCRIPTOR *)((char *)efi_memmap_ptr + memMapSize);
+    auto *efi_mem_iter = efi_memmap_ptr.get();
+    auto *efi_mem_end = (EFI_MEMORY_DESCRIPTOR *)((char *)efi_memmap_ptr.get() + memMapSize);
     while (efi_mem_iter < efi_mem_end) {
 
         tsbp_mmap_type st_type;
@@ -1674,7 +1669,7 @@ page_pool_record *page_pool_records = nullptr;
     loader_data.kern_map = tsbp_kernel_map.data();
     loader_data.kern_map_entries = tsbp_kernel_map.size();
 
-    loader_data.efi_memmap = efi_memmap_ptr;
+    loader_data.efi_memmap = efi_memmap_ptr.get();
     loader_data.efi_memmap_descr_size = memMapDescrSize;
     loader_data.efi_memmap_size = memMapSize;
     loader_data.efi_system_table = EST;
@@ -1698,7 +1693,7 @@ page_pool_record *page_pool_records = nullptr;
     if (EBS->ExitBootServices(ImageHandle, memMapKey) == EFI_INVALID_PARAMETER) {
         tsbp_memmap.clear();
 
-        status = EBS->GetMemoryMap(&memMapSize, efi_memmap_ptr, &memMapKey, &memMapDescrSize, &memMapDescrVersion);
+        status = EBS->GetMemoryMap(&memMapSize, efi_memmap_ptr.get(), &memMapKey, &memMapDescrSize, &memMapDescrVersion);
         if (EFI_ERROR(status)) {
             if (status == EFI_BUFFER_TOO_SMALL) {
                 // If the buffer is too small, we can resize it
