@@ -17,7 +17,7 @@ STRIP ?= strip
 all: tosaithe.efi
 
 tosaithe.efi: main.o tosaithe-proto.o tosaithe-util.o cxxsupport.o
-	$(LD) /machine:x64 /subsystem:10 \
+	$(LD) /machine:x64 /subsystem:efi_application \
 	  /entry:EfiMain /nodefaultlib /base:0 /fixed:no \
 	  /out:tosaithe.efi \
 	  main.o tosaithe-proto.o tosaithe-util.o cxxsupport.o
