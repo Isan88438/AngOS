@@ -16,6 +16,34 @@ extern EFI_SYSTEM_TABLE *EST;
 
 
 template <typename T>
+template <typename T>
+static inline T ang_min(T a, T b)
+{
+    return a < b ? a : b;
+}
+
+template <typename T>
+static inline T ang_max(T a, T b)
+{
+    return a > b ? a : b;
+}
+
+static inline int ang_memcmp(const void *a, const void *b, UINTN n)
+{
+    const unsigned char *aa = (const unsigned char *)a;
+    const unsigned char *bb = (const unsigned char *)b;
+
+    for (UINTN i = 0; i < n; ++i) {
+        if (aa[i] < bb[i])
+            return -1;
+
+        if (aa[i] > bb[i])
+            return 1;
+    }
+
+    return 0;
+}
+
 class ang_vector
 {
     T *data_ = nullptr;
@@ -620,7 +648,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
     const UINTN min_read_chunk = 128*1024u;
 
     efi_page_alloc elf_header_alloc;
-    UINTN first_chunk = std::min(min_read_chunk, kernel_file_size);
+    UINTN first_chunk = ang_min(min_read_chunk, kernel_file_size);
 
     elf_header_alloc.allocate((first_chunk + 0xFFFu)/0x1000u);
 
@@ -657,7 +685,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
     Elf64_Ehdr *elf_hdr = (Elf64_Ehdr *) elf_header_alloc.get_ptr();
 
     // check e_ident
-    if (std::char_traits<char>::compare((const char *)elf_hdr->e_ident, ELFMAGIC, 4) != 0) {
+    if (ang_memcmp((const char *)elf_hdr->e_ident, ELFMAGIC, 4) != 0) {
         con_write(L"Error: incorrect ELF header, not a valid ELF file\r\n");
         return EFI_LOAD_ERROR;
     }
@@ -709,8 +737,8 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
 
     uintptr_t elf_ph_end = elf_ph_off + elf_ph_ent_size * elf_ph_ent_num;
     if (elf_ph_end > first_chunk) {
-        read_amount = std::max(elf_ph_end - first_chunk, min_read_chunk);
-        read_amount = std::min(read_amount, kernel_file_size - first_chunk);
+        read_amount = ang_max(elf_ph_end - first_chunk, min_read_chunk);
+        read_amount = ang_min(read_amount, kernel_file_size - first_chunk);
 
         // Extend allocation. We can assume current kernel limit is on a page boundary.
         UINTN alloc_pages = (read_amount + 0xFFFu) / 0x1000u;
@@ -751,7 +779,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
         __builtin_memcpy(&phdr, (void *)ph_addr, sizeof(phdr));
         if (phdr.p_type == PT_LOAD) {
             // Do some consistency checks while we are at it:
-            auto max_addr = std::numeric_limits<decltype(phdr.p_vaddr)>::max();
+            auto max_addr = static_cast<decltype(phdr.p_vaddr)>(-1);
             if (phdr.p_vaddr > max_addr - phdr.p_memsz) {
                 // size is too large, given the starting address
                 con_write(L"Error: bad ELF structure\r\n");
@@ -782,8 +810,8 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
                     con_write(L"Error: unsupported ELF structure\r\n");
                     return EFI_LOAD_ERROR;
                 }
-                lowest_vaddr = std::min(lowest_vaddr, vaddr);
-                highest_vaddr = std::max(highest_vaddr, vaddr_high);
+                lowest_vaddr = ang_min(lowest_vaddr, vaddr);
+                highest_vaddr = ang_max(highest_vaddr, vaddr_high);
             }
 
             if (phdr.p_memsz > phdr.p_filesz) {
@@ -872,7 +900,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
             // from the header rather than re-reading the file:
             if (phdr.p_offset < first_chunk) {
                 // copy from our initial read rather than re-reading
-                auto copy_size = std::min(first_chunk - phdr.p_offset, seg_size);
+                auto copy_size = ang_min(first_chunk - phdr.p_offset, seg_size);
                 memcpy((void *)(kernel_alloc.get_ptr() + addr_offs), ((char *)elf_hdr) + phdr.p_offset, copy_size);
                 if (copy_size == seg_size) {
                     do_file_read = false;
@@ -1362,7 +1390,7 @@ page_pool_record *page_pool_records = nullptr;
             // Unusual to have nothing mapped at address 0, but let's handle it (we want
             // to ensure the entire first 4GB is mapped regardless of whether there is physical
             // memory present):
-            auto low0_end = std::min(mmdesc_phys_beg, 4*PAGE1GB);
+            auto low0_end = ang_min(mmdesc_phys_beg, 4*PAGE1GB);
             do_mapping(0, low0_end, low0_end, memory_types::CACHE_UC, 0);
         }
 
@@ -1394,7 +1422,7 @@ page_pool_record *page_pool_records = nullptr;
         // the LAPIC and IOAPIC for example.
         if (mmdesc_phys_end < 4*PAGE1GB) {
             if (next_mmdesc != mmdesc_end && next_mmdesc->PhysicalStart != mmdesc_phys_end) {
-                uintptr_t end_map_range = std::min(next_mmdesc->PhysicalStart, 4*PAGE1GB);
+                uintptr_t end_map_range = ang_min(next_mmdesc->PhysicalStart, 4*PAGE1GB);
                 do_mapping(mmdesc_phys_end, mmdesc_phys_end, end_map_range, memory_types::CACHE_UC, 0);
             }
             else {

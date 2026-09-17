@@ -1,7 +1,7 @@
 #ifndef CPU_X86_64_INCLUDED
 #define CPU_X86_64_INCLUDED 1
 
-#include <cstdint>
+#include <stdint.h>
 
 // MSRs
 const uint32_t IA32_EFER = 0xC0000080;
