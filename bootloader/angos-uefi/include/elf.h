@@ -1,7 +1,7 @@
 #ifndef INCLUDE_ELF_H_
 #define INCLUDE_ELF_H_
 
-#include <cstdint>
+#include <stdint.h>
 
 typedef uint16_t Elf64_Half;
 
