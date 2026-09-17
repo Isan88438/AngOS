@@ -1,12 +1,6 @@
 #include "tosaithe-proto.h"
 
-#include <algorithm>
-#include <string>
-#include <memory>
-#include <new>
 
-#include <cstring>
-#include <cstdint>
 
 #include <elf.h>
 
@@ -56,7 +50,7 @@ class tosaithe_memmap {
 
         // Copy map from old to new storage
         for (uint32_t i = 0; i < entries; i++) {
-            new(&newmap[i]) tsbp_mmap_entry(memmap_entries[i]);
+            newmap[i] = memmap_entries[i];
         }
 
         free_pool(memmap_entries);
@@ -85,7 +79,7 @@ public:
             }
         }
 
-        new(&memmap_entries[entries]) tsbp_mmap_entry();
+        memmap_entries[entries] = tsbp_mmap_entry{};
         memmap_entries[entries].type = type_p;
         memmap_entries[entries].base = physaddr;
         memmap_entries[entries].length = length;
@@ -664,7 +658,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
     for (uint16_t i = 0; i < elf_ph_ent_num; i++) {
         uintptr_t ph_addr = i * elf_ph_ent_size + elf_ph_off + elf_header_alloc.get_ptr();
         Elf64_Phdr phdr;
-        std::memcpy(&phdr, (void *)ph_addr, sizeof(phdr));
+        __builtin_memcpy(&phdr, (void *)ph_addr, sizeof(phdr));
         if (phdr.p_type == PT_LOAD) {
             // Do some consistency checks while we are at it:
             auto max_addr = std::numeric_limits<decltype(phdr.p_vaddr)>::max();
@@ -758,7 +752,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
     for (uint16_t i = 0; i < elf_ph_ent_num; /* increment in body */) {
         uintptr_t ph_addr = i * elf_ph_ent_size + elf_ph_off + elf_header_alloc.get_ptr();
         Elf64_Phdr phdr;
-        std::memcpy(&phdr, (void *)ph_addr, sizeof(phdr));
+        __builtin_memcpy(&phdr, (void *)ph_addr, sizeof(phdr));
         if (phdr.p_type == PT_LOAD) {
             uintptr_t addr_offs = phdr.p_vaddr - lowest_vaddr;
             bool do_file_read = true;
@@ -771,7 +765,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
             while (++i < elf_ph_ent_num) {
                 ph_addr += elf_ph_ent_size;
                 Elf64_Phdr next_phdr;
-                std::memcpy(&next_phdr, (void *)ph_addr, sizeof(next_phdr));
+                __builtin_memcpy(&next_phdr, (void *)ph_addr, sizeof(next_phdr));
                 if (next_phdr.p_type != PT_LOAD)
                     break;
                 // If same physical-virtual offset, combine segments
@@ -838,7 +832,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
     for (uint16_t i = 0; i < elf_ph_ent_num; ++i) {
         uintptr_t ph_addr = i * elf_ph_ent_size + elf_ph_off + elf_header_alloc.get_ptr();
         Elf64_Phdr phdr;
-        std::memcpy(&phdr, (void *)ph_addr, sizeof(phdr));
+        __builtin_memcpy(&phdr, (void *)ph_addr, sizeof(phdr));
         if (phdr.p_type == PT_LOAD) {
             tsbp_kernel_map.emplace_back(tsbp_kernel_mapping {
                 phdr.p_vaddr - lowest_vaddr + kernel_alloc.get_ptr(),  // base physical address
@@ -858,7 +852,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
     }
 
     // Check signature
-    if (std::memcmp(&ts_entry_header->signature, "TSBP", 4) != 0) {
+    if (__builtin_memcmp(&ts_entry_header->signature, "TSBP", 4) != 0) {
         con_write(L"Missing Tosaithe boot protocol signature\r\n");
         return EFI_LOAD_ERROR;
     }
@@ -1291,7 +1285,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
 
     tosaithe_loader_data loader_data;
     static_assert(sizeof(loader_data.signature == 4));
-    std::memcpy(&loader_data.signature, "TSLD", 4);
+    __builtin_memcpy(&loader_data.signature, "TSLD", 4);
 
     loader_data.version = 0;
     loader_data.flags = 0;
