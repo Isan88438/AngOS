@@ -14,96 +14,6 @@
 extern EFI_BOOT_SERVICES *EBS;
 extern EFI_SYSTEM_TABLE *EST;
 
-
-template <typename T>
-class ang_vector
-{
-    T *data_ = nullptr;
-    UINTN size_ = 0;
-    UINTN capacity_ = 0;
-
-    void grow()
-    {
-        UINTN new_capacity =
-            capacity_ == 0 ? 8 : capacity_ * 2;
-
-        T *new_data =
-            (T *)alloc_pool(sizeof(T) * new_capacity);
-
-        if (new_data == nullptr) {
-            con_write(L"ERROR: bootloader out of memory.\r\n");
-            for (;;) {
-                asm volatile ("hlt");
-            }
-        }
-
-        if (data_ != nullptr && size_ != 0) {
-            __builtin_memcpy(
-                new_data,
-                data_,
-                sizeof(T) * size_
-            );
-
-            free_pool(data_);
-        }
-
-        data_ = new_data;
-        capacity_ = new_capacity;
-    }
-
-public:
-    ang_vector() {}
-
-    ~ang_vector()
-    {
-        if (data_ != nullptr) {
-            free_pool(data_);
-        }
-    }
-
-    ang_vector(const ang_vector &) = delete;
-    ang_vector &operator=(const ang_vector &) = delete;
-
-    void push_back(const T &value)
-    {
-        if (size_ == capacity_) {
-            grow();
-        }
-
-        data_[size_++] = value;
-    }
-
-    T *begin()
-    {
-        return data_;
-    }
-
-    T *end()
-    {
-        return data_ + size_;
-    }
-
-    const T *begin() const
-    {
-        return data_;
-    }
-
-    const T *end() const
-    {
-        return data_ + size_;
-    }
-
-    T *data()
-    {
-        return data_;
-    }
-
-    UINTN size() const
-    {
-        return size_;
-    }
-};
-
 // Supported page sizes:
 static const uintptr_t PAGE4KB = 0x1000u;
 static const uintptr_t PAGE2MB = 0x200000u;
@@ -179,7 +89,7 @@ public:
 
     // Insert an entry into the map. Any existing entries which are overlapped by the new entry are
     // trimmed (or removed in the case of total overlap).
-    // On allocation failure the bootloader halts.
+    // On failure, throws std::bad_alloc (map may be invalid)
     // On success: map may require sorting
     void insert_entry(tsbp_mmap_type type_p, uint64_t physaddr, uint64_t length, uint32_t flags)
     {
@@ -281,7 +191,7 @@ static const CHAR16 * const OPEN_KERNEL_ERR_VOLUME = L"cannot open volume";
 static const CHAR16 * const OPEN_KERNEL_ERR_FILEOPEN = L"cannot open file";
 
 // Open a kernel file for reading, return true if successful.
-// Allocation failure halts the bootloader.
+// Throws: std::bad_alloc
 static bool open_kernel_file(EFI_HANDLE image_handle, const EFI_DEVICE_PATH_PROTOCOL *exec_path,
         EFI_FILE_PROTOCOL **kernel_file_p, UINTN *kernel_file_size_p)
 {
@@ -453,7 +363,7 @@ static void check_framebuffer(tosaithe_loader_data *fbinfo)
 }
 
 // Get a copy of the EFI memory map in an allocated buffer. Returns null on general failure or
-// Out-of-memory halts the bootloader.
+// throws std::bad_alloc for out-of-memory.
 //   memMapSize - will contain size in bytes
 //   memMapKey - will contain key suitable for passing to ExitBootServices
 //   memMapDescrSize - will be set to the size of each descriptor entry
@@ -742,7 +652,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
     };
 
     // bss areas need to be cleared before entry to kernel
-    ang_vector<bss_area> bss_areas;
+    std::vector<bss_area> bss_areas;
 
     // Find the total virtual address span of all segments (lowest_vaddr, highest_vaddr)
     for (uint16_t i = 0; i < elf_ph_ent_num; i++) {
@@ -918,7 +828,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
     kernel_handle.release();
 
     // build vector of kernel mappings
-    ang_vector<tsbp_kernel_mapping> tsbp_kernel_map;
+    std::vector<tsbp_kernel_mapping> tsbp_kernel_map;
     for (uint16_t i = 0; i < elf_ph_ent_num; ++i) {
         uintptr_t ph_addr = i * elf_ph_ent_size + elf_ph_off + elf_header_alloc.get_ptr();
         Elf64_Phdr phdr;
@@ -1033,14 +943,7 @@ EFI_STATUS load_tsbp(EFI_HANDLE ImageHandle, const EFI_DEVICE_PATH_PROTOCOL *exe
 
     const int PAGE_POOL_ALLOC_SIZE = 8;
 
-    struct page_pool_record
-{
-    EFI_PHYSICAL_ADDRESS address;
-    UINTN pages;
-    page_pool_record *next;
-};
-
-page_pool_record *page_pool_records = nullptr;
+    std::vector<efi_page_alloc> page_table_allocs;
 
     efi_page_alloc page_tables_alloc_pool;
     page_tables_alloc_pool.allocate(PAGE_POOL_ALLOC_SIZE);
@@ -1050,37 +953,9 @@ page_pool_record *page_pool_records = nullptr;
         uintptr_t ap_end = (uintptr_t)page_tables_alloc_pool.get_ptr() + page_tables_alloc_pool.page_count() * PAGE4KB;
         if (alloc_pool_next == (void *)ap_end) {
             if (!page_tables_alloc_pool.extend_nx(PAGE_POOL_ALLOC_SIZE)) {
-                page_pool_record *record =
-                    (page_pool_record *)alloc_pool(
-                        sizeof(page_pool_record)
-                    );
-
-                if (record == nullptr) {
-                    con_write(L"ERROR: bootloader out of memory.\r\n");
-                    for (;;) {
-                        asm volatile ("hlt");
-                    }
-                }
-
-                record->address =
-                    page_tables_alloc_pool.get_ptr();
-
-                record->pages =
-                    page_tables_alloc_pool.page_count();
-
-                record->next =
-                    page_pool_records;
-
-                page_pool_records = record;
-
-                // Detach the old allocation so the RAII object
-                // does not free the pages.
-                page_tables_alloc_pool.rezone(0, 0);
-
+                page_table_allocs.emplace_back(std::move(page_tables_alloc_pool));
                 page_tables_alloc_pool.allocate(PAGE_POOL_ALLOC_SIZE);
-
-                alloc_pool_next =
-                    (void *)page_tables_alloc_pool.get_ptr();
+                alloc_pool_next = (void *)page_tables_alloc_pool.get_ptr();
             }
         }
 
