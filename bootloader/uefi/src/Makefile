@@ -10,7 +10,7 @@ LD := lld-link
 
 OBJECTS := main.o tosaithe-proto.o tosaithe-util.o cxxsupport.o
 
-OUT ?= ../../../../build/AngOS.efi
+OUT ?= ../../../build/AngOS.efi
 
 .PHONY: all clean
 

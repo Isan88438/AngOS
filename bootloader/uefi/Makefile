@@ -21,7 +21,6 @@ CXXPPFLAGS := -nostdinc++ \
               -I $(TOPDIR)/include \
               $(VIS_HDR)
 
-OUT ?= $(TOPDIR)/../../build/AngOS.efi
 
 export EFICFLAGS CXXFLAGS CXXPPFLAGS CXX CC OUT
 
