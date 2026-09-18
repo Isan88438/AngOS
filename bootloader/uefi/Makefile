@@ -17,13 +17,13 @@ CC := gcc
 
 VIS_HDR := -include $(TOPDIR)/include/visibility-header.h
 
-CPPFLAGS := $(VIS_HDR)
-
 CXXPPFLAGS := -nostdinc++ \
               -I $(TOPDIR)/include \
               $(VIS_HDR)
 
-export EFICFLAGS CFLAGS CXXFLAGS CXXPPFLAGS CXX CC
+OUT ?= $(TOPDIR)/../../build/AngOS.efi
+
+export EFICFLAGS CXXFLAGS CXXPPFLAGS CXX CC OUT
 
 .PHONY: all clean
 
