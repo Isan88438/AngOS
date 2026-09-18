@@ -8,9 +8,14 @@ endif
 
 LD := lld-link
 
-OBJECTS := main.o tosaithe-proto.o tosaithe-util.o cxxsupport.o
-
+BUILD ?= ../../../build/uefi
 OUT ?= ../../../build/AngOS.efi
+
+OBJECTS := \
+	$(BUILD)/main.o \
+	$(BUILD)/tosaithe-proto.o \
+	$(BUILD)/tosaithe-util.o \
+	$(BUILD)/cxxsupport.o
 
 .PHONY: all clean
 
@@ -28,17 +33,21 @@ $(OUT): $(OBJECTS)
 	  /out:$(OUT) \
 	  $(OBJECTS)
 
-main.o: main.cc
+$(BUILD)/main.o: main.cc
+	mkdir -p $(dir $@)
 	$(CXX) $(CXXPPFLAGS) $(EFICFLAGS) $(CXXFLAGS) -c $< -o $@
 
-tosaithe-proto.o: tosaithe-proto.cc
+$(BUILD)/tosaithe-proto.o: tosaithe-proto.cc
+	mkdir -p $(dir $@)
 	$(CXX) $(CXXPPFLAGS) $(EFICFLAGS) $(CXXFLAGS) -c $< -o $@
 
-tosaithe-util.o: tosaithe-util.cc
+$(BUILD)/tosaithe-util.o: tosaithe-util.cc
+	mkdir -p $(dir $@)
 	$(CXX) $(CXXPPFLAGS) $(EFICFLAGS) $(CXXFLAGS) -c $< -o $@
 
-cxxsupport.o: cxxsupport.cc
+$(BUILD)/cxxsupport.o: cxxsupport.cc
+	mkdir -p $(dir $@)
 	$(CXX) $(CXXPPFLAGS) $(EFICFLAGS) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJECTS)
+	rm -f $(OBJECTS) $(OUT)

@@ -22,7 +22,7 @@ CXXPPFLAGS := -nostdinc++ \
               $(VIS_HDR)
 
 
-export EFICFLAGS CXXFLAGS CXXPPFLAGS CXX CC OUT
+export EFICFLAGS CXXFLAGS CXXPPFLAGS CXX CC
 
 .PHONY: all clean
 
