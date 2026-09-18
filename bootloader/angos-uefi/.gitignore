@@ -1,5 +1,5 @@
 *.o
 *.a
-/bmcxxabi
-/bmunwind
-/libbmcxx
+*.map
+tosaithe.efi
+tosaithe.efi.so
