@@ -4,12 +4,6 @@ LD := ld.lld
 
 TARGET := x86_64-unknown-elf
 
-CFLAGS := --target=$(TARGET) -m64 -ffreestanding -fno-stack-protector -mgeneral-regs-only \
-          -fno-asynchronous-unwind-tables -fno-unwind-tables \
-          -Wall -Wextra \
-          -Ikernel/include \
-          -Ikernel/x86_64
-
 CFLAGS := --target=$(TARGET) -m64 -mcmodel=kernel -mno-red-zone \
           -ffreestanding -fno-stack-protector -mgeneral-regs-only \
           -fno-asynchronous-unwind-tables -fno-unwind-tables \
@@ -21,6 +15,7 @@ ASFLAGS := --target=$(TARGET) -m64 -ffreestanding
 
 BUILD := build
 KERNEL := $(BUILD)/AngOS.elf
+UEFI := $(BUILD)/AngOS.efi
 
 KERNEL_C := \
     kernel/x86_64/init.c \
@@ -49,18 +44,20 @@ KERNEL_ASM_OBJS := \
     $(patsubst kernel/%.S,$(BUILD)/%_asm.o,$(filter %.S,$(KERNEL_ASM))) \
     $(patsubst kernel/%.asm,$(BUILD)/%_asm.o,$(filter %.asm,$(KERNEL_ASM)))
 
-KERNEL_OBJS := \
-    $(KERNEL_C_OBJS) \
-    $(KERNEL_ASM_OBJS)
+KERNEL_OBJS := $(KERNEL_C_OBJS) $(KERNEL_ASM_OBJS)
 
-.PHONY: all clean
+.PHONY: all kernel uefi clean
 
-all: $(KERNEL)
-	@echo "Kernel linked successfully: $(KERNEL)"
+all: kernel uefi
+
+kernel: $(KERNEL)
+
+uefi: $(UEFI)
 
 $(KERNEL): $(KERNEL_OBJS) kernel/linker.ld
 	@mkdir -p $(dir $@)
 	$(LD) -m elf_x86_64 -nostdlib -T kernel/linker.ld $(KERNEL_OBJS) -o $@
+	@echo "Kernel linked: $@"
 
 $(BUILD)/%.o: kernel/%.c
 	@mkdir -p $(dir $@)
@@ -74,5 +71,9 @@ $(BUILD)/%_asm.o: kernel/%.asm
 	@mkdir -p $(dir $@)
 	nasm -f elf64 $< -o $@
 
+$(UEFI):
+	$(MAKE) -C bootloader/uefi
+
 clean:
 	rm -rf $(BUILD)
+	$(MAKE) -C bootloader/uefi clean
