@@ -2,6 +2,7 @@
 #define MEMORY_H
 #include <types.h>
 #include <tosaithe.h>
+#include <tosaithe.h>
 
 #define PAGE_SIZE 4096
 
@@ -30,8 +31,7 @@ void *find_physaddr(void *virt);
 void *phys_page_alloc();
 void phys_page_free(void *addr);
 
-struct tosaithe_loader_data;
-void phys_memory_init(const struct tosaithe_loader_data *loader_data);
+void phys_memory_init(const tosaithe_loader_data *loader_data);
 u64 phys_memory_total_pages(void);
 u64 phys_memory_free_pages(void);
 
