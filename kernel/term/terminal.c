@@ -88,7 +88,7 @@ void terminal_putchar(char c) {
 
     if (c == '\n') {
         cursor_x = 0;
-        cursor_y + = CHAR_H;
+        cursor_y += CHAR_H;
 
         if (cursor_y + GLYPH_H > fb_h) {
             scroll();
@@ -100,7 +100,7 @@ void terminal_putchar(char c) {
 
     if (cursor_x + GLYPH_W > fb_w) {
         cursor_x = 0;
-        cursor_y + = CHAR_H;
+        cursor_y += CHAR_H;
     }
 
     if (cursor_y + GLYPH_H > fb_h) {
@@ -118,7 +118,7 @@ void terminal_putchar(char c) {
         }
     }
 
-    cursor_x + = CHAR_W;
+    cursor_x += CHAR_W;
 }
 
 void terminal_write(const char *str) {
