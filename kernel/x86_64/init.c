@@ -8,63 +8,29 @@
 #include "init.h"
 #include <syscall.h>
 #include <tosaithe.h>
-
-void init_syscall();
-void *malloc_heap(size_t bytes, int heap);
-void memdump(const void *ptr, size_t count);
+#include <terminal.h>
 
 void init(tosaithe_loader_data *loader_data) {
-
     fb_addr = loader_data->framebuffer_addr;
     fb_size = loader_data->framebuffer_size;
     fb_w = loader_data->framebuffer_width;
     fb_h = loader_data->framebuffer_height;
     fb_pixperline = loader_data->framebuffer_pitch;
 
-	debug_log(
-	"GLOBALS:\n"
-	"memmap: %p\n"
-	"mm_descs: %d\n\n"
-	"freemap: %p\n"
-	"fm_descs: %d\n\n"
-	"kernel_paddr: %p\n"
-	"kernel_vaddr: %p\n"
-	"kernel_size: %d\n\n"
-	"memory_bitmap: %p\n"
-	"memory_pages: %d\n\n"
-	"fb_addr: %p\n"
-	"fb_size: 0x%X\n"
-	"fb_w: %d\n"
-	"fb_h: %d\n"
-	"fb_pixperline: %d\n\n\n",
-	memmap, mm_descs, freemap, fm_descs,
-	kernel_paddr, kernel_vaddr, kernel_size,
-	pmem_bmap, memory_pages,
-	fb_addr, fb_size, fb_w, fb_h, fb_pixperline);
+    terminal_init();
 
-	for (size_t i = 0; i < fm_descs; ++i) {
-		debug_log(
-		"%d:\n"
-		"Addr: %p\n"
-		"Pages: 0x%X\n\n",
-		i, freemap[i].addr, freemap[i].blocks);
-	}
+    terminal_write("ANGOS KERNEL STARTED\n");
+    terminal_write("INITIALIZING HARDWARE\n");
 
-	init_gdt();
-	/* init_memory(); */
-	init_idt();
-	init_timer();
-//	init_disk();
-//	init_syscall();
+    init_gdt();
+    terminal_write("GDT OK\n");
 
-	int *addr = malloc(sizeof(int) * 40000);
-	for (int i = 0; i < 40000; ++i)
-		addr[i] = i;
-	for (int i = 0; i < 40000; ++i)
-		debug_log("%d\n", addr[i]);
+    init_idt();
+    terminal_write("IDT OK\n");
 
-	debug_log("ADDR: %p\n", addr);
-	int *addr2 = malloc(sizeof(int) * 5);
-	debug_log("ADDR2: %p\n", addr2);
-//	free(addr);
+    init_timer();
+    terminal_write("PIT OK\n");
+
+    terminal_write("TERMINAL OK\n");
+    terminal_write("ANGOS IS RUNNING\n");
 }
