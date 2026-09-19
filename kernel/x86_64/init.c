@@ -20,6 +20,21 @@ void init(tosaithe_loader_data *loader_data) {
     terminal_init();
 
     terminal_write("ANGOS KERNEL STARTED\n");
+
+    phys_memory_init(loader_data);
+
+    if (phys_memory_total_pages() != 0) {
+        void *test_page = phys_page_alloc();
+
+        if (test_page) {
+            phys_page_free(test_page);
+            terminal_write("PHYSICAL MEMORY OK\n");
+        } else {
+            terminal_write("PHYSICAL MEMORY FAILED\n");
+        }
+    } else {
+        terminal_write("NO USABLE MEMORY\n");
+    }
     terminal_write("INITIALIZING HARDWARE\n");
 
     init_gdt();

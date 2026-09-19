@@ -4,6 +4,7 @@
 #include <globals.h>
 #include "memory.h"
 #include <syscall.h>
+#include <tosaithe.h>
 #ifndef CEILING
 #define CEILING(a, b) (((a) + (b) - 1) / (b))
 #endif
@@ -127,81 +128,249 @@ void free(void *addr) {
 		phys_page_free(find_physaddr(addr + i * PAGE_SIZE));
 }
 
-/*
-	Sets a page as used in the physical memory bitmap
-	Returns the physical address of that page
-*/
-void *phys_page_alloc() {
-	u64 i, j;
-	u64 h = 0;
-	u8 bit = 0;
-	void *addr;
-	u64 pages;
 
-	for (i = 0; i < fm_descs; ++i) {
-		addr  = freemap[i].addr;
-		pages = freemap[i].blocks;
-		for (j = 0; j < pages; ++j) {
-			if (pmem_bmap[h] & 1 << bit) {
-				addr += PAGE_SIZE;
-				++bit;
-				if (bit >= BITS_PER_ELEMENT) {
-					bit = 0;
-					++h;
-				}
-			}
-			else {
-				pmem_bmap[h] |= 1 << bit;
-				return addr;
-			}
-		}
-	}
+#define MAX_PHYS_REGIONS 512
 
-	return 0;
+typedef struct {
+        u64 base;
+        u64 pages;
+} phys_region_t;
+
+static phys_region_t managed_regions[MAX_PHYS_REGIONS];
+static phys_region_t free_regions[MAX_PHYS_REGIONS];
+
+static size_t managed_region_count;
+static size_t free_region_count;
+
+static u64 phys_total_pages;
+static u64 phys_free_pages_count;
+
+static void phys_sort_and_merge(phys_region_t *regions, size_t *count) {
+        for (size_t i = 1; i < *count; ++i) {
+                phys_region_t value = regions[i];
+                size_t j = i;
+
+                while (j > 0 && regions[j - 1].base > value.base) {
+                        regions[j] = regions[j - 1];
+                        --j;
+                }
+
+                regions[j] = value;
+        }
+
+        size_t out = 0;
+
+        for (size_t i = 0; i < *count; ++i) {
+                if (regions[i].pages == 0)
+                        continue;
+
+                if (out != 0) {
+                        u64 end =
+                                regions[out - 1].base +
+                                regions[out - 1].pages * PAGE_SIZE;
+
+                        if (end == regions[i].base) {
+                                regions[out - 1].pages += regions[i].pages;
+                                continue;
+                        }
+                }
+
+                regions[out++] = regions[i];
+        }
+
+        *count = out;
 }
 
-/*
-	Unsets the bit for a specific page in the physical memory bitmap
-*/
+static bool phys_managed(u64 addr) {
+        for (size_t i = 0; i < managed_region_count; ++i) {
+                u64 begin = managed_regions[i].base;
+                u64 end =
+                        begin +
+                        managed_regions[i].pages * PAGE_SIZE;
+
+                if (addr >= begin && addr < end)
+                        return true;
+        }
+
+        return false;
+}
+
+static bool phys_free_already(u64 addr) {
+        for (size_t i = 0; i < free_region_count; ++i) {
+                u64 begin = free_regions[i].base;
+                u64 end =
+                        begin +
+                        free_regions[i].pages * PAGE_SIZE;
+
+                if (addr >= begin && addr < end)
+                        return true;
+        }
+
+        return false;
+}
+
+static bool phys_insert_free_page(u64 addr) {
+        size_t pos = 0;
+
+        while (pos < free_region_count &&
+               free_regions[pos].base < addr)
+                ++pos;
+
+        if (pos > 0) {
+                phys_region_t *prev = &free_regions[pos - 1];
+                u64 prev_end =
+                        prev->base + prev->pages * PAGE_SIZE;
+
+                if (prev_end == addr) {
+                        ++prev->pages;
+
+                        if (pos < free_region_count &&
+                            addr + PAGE_SIZE == free_regions[pos].base) {
+                                prev->pages += free_regions[pos].pages;
+
+                                for (size_t i = pos;
+                                     i + 1 < free_region_count;
+                                     ++i) {
+                                        free_regions[i] = free_regions[i + 1];
+                                }
+
+                                --free_region_count;
+                        }
+
+                        return true;
+                }
+        }
+
+        if (pos < free_region_count &&
+            addr + PAGE_SIZE == free_regions[pos].base) {
+                free_regions[pos].base = addr;
+                ++free_regions[pos].pages;
+                return true;
+        }
+
+        if (free_region_count >= MAX_PHYS_REGIONS)
+                return false;
+
+        for (size_t i = free_region_count; i > pos; --i)
+                free_regions[i] = free_regions[i - 1];
+
+        free_regions[pos].base = addr;
+        free_regions[pos].pages = 1;
+        ++free_region_count;
+
+        return true;
+}
+
+void phys_memory_init(const tosaithe_loader_data *loader_data) {
+        managed_region_count = 0;
+        free_region_count = 0;
+        phys_total_pages = 0;
+        phys_free_pages_count = 0;
+
+        if (!loader_data || !loader_data->memmap)
+                return;
+
+        for (u32 i = 0; i < loader_data->memmap_entries; ++i) {
+                const tsbp_mmap_entry *entry = &loader_data->memmap[i];
+
+                if (entry->type != 0)
+                        continue;
+
+                u64 begin = (u64)entry->base;
+                u64 end = begin + (u64)entry->length;
+
+                begin = (begin + PAGE_SIZE - 1) & ~(u64)(PAGE_SIZE - 1);
+                end &= ~(u64)(PAGE_SIZE - 1);
+
+                if (end <= begin)
+                        continue;
+
+                if (begin == 0) {
+                        if (end <= PAGE_SIZE)
+                                continue;
+
+                        begin = PAGE_SIZE;
+                }
+
+                u64 pages = (end - begin) / PAGE_SIZE;
+
+                if (managed_region_count >= MAX_PHYS_REGIONS)
+                        break;
+
+                managed_regions[managed_region_count].base = begin;
+                managed_regions[managed_region_count].pages = pages;
+                ++managed_region_count;
+        }
+
+        phys_sort_and_merge(managed_regions, &managed_region_count);
+
+        for (size_t i = 0; i < managed_region_count; ++i) {
+                free_regions[free_region_count++] = managed_regions[i];
+                phys_total_pages += managed_regions[i].pages;
+        }
+
+        free_region_count = managed_region_count;
+        phys_free_pages_count = phys_total_pages;
+}
+
+void *phys_page_alloc(void) {
+        for (size_t i = 0; i < free_region_count; ++i) {
+                phys_region_t *region = &free_regions[i];
+
+                if (region->pages == 0)
+                        continue;
+
+                u64 addr = region->base;
+
+                region->base += PAGE_SIZE;
+                --region->pages;
+
+                if (region->pages == 0) {
+                        for (size_t j = i;
+                             j + 1 < free_region_count;
+                             ++j) {
+                                free_regions[j] = free_regions[j + 1];
+                        }
+
+                        --free_region_count;
+                }
+
+                --phys_free_pages_count;
+                return (void *)addr;
+        }
+
+        return 0;
+}
+
 void phys_page_free(void *addr) {
-	if ((u64) addr % PAGE_SIZE) return;
-	u64 i, j;
-	u64 h = 0;
-	u8 bit = 0;
-	void *ptr;
-	u64 pages;
+        u64 page = (u64)addr;
 
-	for (i = 0; i < mm_descs; ++i) {
-		ptr   = freemap[i].addr;
-		pages = freemap[i].blocks;
-		for (j = 0; j < pages; ++j) {
-			if (ptr == addr) {
-				pmem_bmap[h] &= ~(1 << bit);
-				return;
-			}
-			++bit;
-			if (bit >= BITS_PER_ELEMENT) {
-				bit = 0;
-				++h;
-			}
-			ptr += PAGE_SIZE;
-		}
-	}
+        if (page == 0 || (page & (PAGE_SIZE - 1)) != 0)
+                return;
+
+        if (!phys_managed(page))
+                return;
+
+        if (phys_free_already(page))
+                return;
+
+        if (!phys_insert_free_page(page))
+                return;
+
+        ++phys_free_pages_count;
 }
 
-/* Gets *pages* number of physical pages and maps them to *virt* */
-void alloc_and_map(const void *virt, size_t pages) {
-	void *page;
-	while (pages) {
-		page = phys_page_alloc();
-		map_page(page, (void *) virt);
-		virt += PAGE_SIZE;
-		--pages;
-	}
+u64 phys_memory_total_pages(void) {
+        return phys_total_pages;
 }
+
+u64 phys_memory_free_pages(void) {
+        return phys_free_pages_count;
+}
+
 
 /*
-	Combines contiguous free spaces into one entry
+ * Combines contiguous free spaces into one entry
 */
 void refresh_freespace() {
 	for (int i = 0; i < HEAPS; ++i) {
