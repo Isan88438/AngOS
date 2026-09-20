@@ -1,120 +1,181 @@
 #include <types.h>
+#include <stdbool.h>
 #include <cpu/IO.h>
 #include <cpu/IDT.h>
+#include <PIC.h>
 #include <terminal.h>
+#include <keyboard.h>
 
-#define KEYBOARD_DATA   0x60
-#define KEYBOARD_STATUS 0x64
-#define KEYBOARD_IRQ    1
+static bool shift = false;
+static bool caps_lock = false;
 
-static bool shift_down;
-static bool caps_lock;
+static const char keymap[128] = {
+    [0x02] = '1',
+    [0x03] = '2',
+    [0x04] = '3',
+    [0x05] = '4',
+    [0x06] = '5',
+    [0x07] = '6',
+    [0x08] = '7',
+    [0x09] = '8',
+    [0x0A] = '9',
+    [0x0B] = '0',
 
-static const char scancode[128] = {
-    0,   27,  '1','2','3','4','5','6',
-    '7','8',  '9','0','-',  '=','\b','\t',
+    [0x10] = 'q',
+    [0x11] = 'w',
+    [0x12] = 'e',
+    [0x13] = 'r',
+    [0x14] = 't',
+    [0x15] = 'y',
+    [0x16] = 'u',
+    [0x17] = 'i',
+    [0x18] = 'o',
+    [0x19] = 'p',
 
-    'q','w','e','r','t','y','u','i',
-    'o','p','[',']','\n', 0,   'a','s',
+    [0x1E] = 'a',
+    [0x1F] = 's',
+    [0x20] = 'd',
+    [0x21] = 'f',
+    [0x22] = 'g',
+    [0x23] = 'h',
+    [0x24] = 'j',
+    [0x25] = 'k',
+    [0x26] = 'l',
 
-    'd','f','g','h','j','k','l',';',
-    '\'','`', 0,   '\\','z','x','c','v',
+    [0x2C] = 'z',
+    [0x2D] = 'x',
+    [0x2E] = 'c',
+    [0x2F] = 'v',
+    [0x30] = 'b',
+    [0x31] = 'n',
+    [0x32] = 'm',
 
-    'b','n','m',',','.','/', 0,   '*',
-    0,   ' ',  0,   0,   0,   0,   0,   0,
-
-    0,   0,    0,   0,   0,   0,   0,   '7',
-    '8','9',  '-','4','5','6','+','1',
-    '2','3',  '0','.', 0,   0,   0,   0,
-
-    0,   0,    0,   0,   0,   0,   0,   0,
-    0,   0,    0,   0,   0,   0,   0,   0
+    [0x39] = ' ',
 };
 
-static const char shifted[128] = {
-    0,   27,  '!','@','#','$','%','^',
-    '&','*',  '(',')','_','+','\b','\t',
+static char shifted_key(u8 scancode)
+{
+    switch (scancode) {
+        case 0x02: return '!';
+        case 0x03: return '@';
+        case 0x04: return '#';
+        case 0x05: return '$';
+        case 0x06: return '%';
+        case 0x07: return '^';
+        case 0x08: return '&';
+        case 0x09: return '*';
+        case 0x0A: return '(';
+        case 0x0B: return ')';
 
-    'Q','W','E','R','T','Y','U','I',
-    'O','P','{','}','\n', 0,   'A','S',
+        case 0x0C: return '_';
+        case 0x0D: return '+';
 
-    'D','F','G','H','J','K','L',':',
-    '"','~', 0,   '|','Z','X','C','V',
+        case 0x1A: return '{';
+        case 0x1B: return '}';
 
-    'B','N','M','<','>','?', 0,   '*',
-    0,   ' ',  0,   0,   0,   0,   0,   0,
+        case 0x2B: return '|';
 
-    0,   0,    0,   0,   0,   0,   0,   '7',
-    '8','9',  '-','4','5','6','+','1',
-    '2','3',  '0','.', 0,   0,   0,   0,
+        default:
+            return 0;
+    }
+}
 
-    0,   0,    0,   0,   0,   0,   0,   0,
-    0,   0,    0,   0,   0,   0,   0,   0
-};
+static bool is_letter_scancode(u8 scancode)
+{
+    return
+        (scancode >= 0x10 && scancode <= 0x19) ||
+        (scancode >= 0x1E && scancode <= 0x26) ||
+        (scancode >= 0x2C && scancode <= 0x32);
+}
 
-__attribute__((interrupt))
-static void keyboard_interrupt(void *frame __attribute__((unused))) {
-    u8 code = inb(KEYBOARD_DATA);
+static void keyboard_interrupt(void)
+{
+    u8 status = inb(0x64);
 
-    static bool extended;
-    if (code == 0xE0) {
-        extended = true;
+    if (!(status & 1)) {
+        return;
+    }
+
+    u8 scancode = inb(0x60);
+
+    /* Key release */
+    if (scancode & 0x80) {
+        u8 released = scancode & 0x7F;
+
+        if (released == 0x2A || released == 0x36) {
+            shift = false;
+        }
+
         piceoi(false);
         return;
     }
 
-    if (extended) {
-        extended = false;
+    /* Shift */
+    if (scancode == 0x2A || scancode == 0x36) {
+        shift = true;
         piceoi(false);
         return;
     }
 
-    if (code & 0x80) {
-        u8 released = code & 0x7F;
-
-        if (released == 0x2A || released == 0x36)
-            shift_down = false;
-
-        piceoi(false);
-        return;
-    }
-
-    if (code == 0x2A || code == 0x36) {
-        shift_down = true;
-        piceoi(false);
-        return;
-    }
-
-    if (code == 0x3A) {
+    /* Caps Lock */
+    if (scancode == 0x3A) {
         caps_lock = !caps_lock;
         piceoi(false);
         return;
     }
 
-    if (code < 128) {
-        char c = shift_down ? shifted[code] : scancode[code];
+    /* Enter */
+    if (scancode == 0x1C) {
+        terminal_putchar('\n');
+        piceoi(false);
+        return;
+    }
 
-        if (caps_lock &&
-            ((c >= 'a' && c <= 'z') ||
-             (c >= 'A' && c <= 'Z'))) {
-            if (c >= 'a' && c <= 'z')
+    /* Backspace */
+    if (scancode == 0x0E) {
+        terminal_putchar('\b');
+        piceoi(false);
+        return;
+    }
+
+    char c = 0;
+
+    /* Shifted symbols */
+    if (shift) {
+        c = shifted_key(scancode);
+    }
+
+    /* Normal key */
+    if (c == 0 && scancode < 128) {
+        c = keymap[scancode];
+    }
+
+    if (c != 0) {
+        if (is_letter_scancode(scancode)) {
+            /*
+             * Letter case:
+             * shift XOR caps = uppercase
+             */
+            if (shift ^ caps_lock) {
                 c = (char)(c - 'a' + 'A');
-            else
-                c = (char)(c - 'A' + 'a');
+            }
+        } else if (shift) {
+            char shifted = shifted_key(scancode);
+            if (shifted != 0) {
+                c = shifted;
+            }
         }
 
-        if (c)
-            terminal_putchar(c);
+        terminal_putchar(c);
     }
 
     piceoi(false);
 }
 
-void keyboard_init(void) {
-
+void keyboard_init(void)
+{
     addirq(0x21, (void *)keyboard_interrupt, 0x8E);
-
-    unmaskirq(KEYBOARD_IRQ);
+    unmaskirq(1);
 
     terminal_write("KEYBOARD OK\n");
 }
