@@ -2,16 +2,22 @@
 
 **Version 1.0**
 
-Copyright © 2026 AngOS Project / Ethan Angstetra
+AngOS™
 
-All rights reserved except as expressly granted below.
+Copyright © 2026 Ethan Angstetra.
+
+All rights reserved except as expressly granted by this License.
 
 ## 1. Definitions
 
 For the purposes of this License:
+
 **"AngOS"** means the software, source code, documentation, and other original material distributed as part of the AngOS project.
+
 **"Copyright Holder"** means the person or entity holding the copyright to the original AngOS material.
+
 **"Private Use"** means use of AngOS by an individual for personal, educational, experimental, or other non-commercial purposes without publicly distributing the software or a modified version of it.
+
 **"Contribution"** means original work submitted to the AngOS project for possible inclusion in AngOS.
 
 ## 2. Permission to Use
@@ -80,7 +86,8 @@ If you do not agree to these terms, you are not granted permission to use, modif
 
 **AngOS License Version 1.0**
 
-Copyright © 2026 AngOS Project / Ethan Angstetra
+AngOS™
+
+Copyright © 2026 Ethan Angstetra.
 
 All rights reserved except as expressly granted by this License.
- 
