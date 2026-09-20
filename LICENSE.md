@@ -52,7 +52,7 @@ You may not publicly distribute a modified version without permission from the C
 
 Contributions to AngOS are welcome.
 Submitting a Contribution does not guarantee that the Contribution will be accepted or incorporated into AngOS.
-By submitting a Contribution that is accepted and incorporated into AngOS, you grant the AngOS project and the Copyright Holder permission to use, modify, combine, reproduce, and distribute that Contribution as part of AngOS under this License.
+By submitting a Contribution that is accepted and incorporated into AngOS, you grant AngOS and the Copyright Holder permission to use, modify, combine, reproduce, and distribute that Contribution as part of AngOS under this License.
 You represent that you have the necessary rights to submit the Contribution and that the Contribution does not knowingly violate the rights of another person or project.
 The Copyright Holder may also choose to distribute an accepted Contribution under another license or grant additional permissions for that Contribution.
 
