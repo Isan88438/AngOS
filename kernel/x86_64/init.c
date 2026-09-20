@@ -65,6 +65,7 @@ void init(tosaithe_loader_data *loader_data) {
 
         init_idt();
         terminal_write("IDT OK\n");
+        keyboard_init();
 
         init_timer();
         terminal_write("PIT OK\n");
