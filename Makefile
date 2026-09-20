@@ -28,6 +28,8 @@ KERNEL_C := \
     kernel/x86_64/memory/paging.c \
     kernel/x86_64/syscall/syscall.c \
     kernel/x86_64/syscall/debug_log.c \
+    kernel/x86_64/drivers/keyboard.c \
+    kernel/x86_64/drivers/keyboard.c \
     kernel/memory/memory.c \
     kernel/term/terminal.c \
     kernel/libc/kernel.c \
