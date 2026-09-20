@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <cpu/IO.h>
 #include <cpu/IDT.h>
-#include <PIC.h>
+#include <cpu/ints/PIC.h>
 #include <terminal.h>
 #include <keyboard.h>
 
