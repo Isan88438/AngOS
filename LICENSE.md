@@ -59,7 +59,7 @@ Contributions to AngOS are welcome.
 
 Submitting a Contribution does not guarantee that the Contribution will be accepted or incorporated into AngOS.
 
-By submitting a Contribution that is accepted and incorporated into AngOS, you grant AngOS and the Copyright Holder permission to use, modify, combine, reproduce, and distribute that Contribution as part of AngOS under this License.
+By submitting a Contribution that is accepted and incorporated into AngOS, you grant the Copyright Holder permission to use, modify, combine, reproduce, and distribute that Contribution as part of AngOS under this License.
 
 You represent that you have the necessary rights to submit the Contribution and that the Contribution does not knowingly violate the rights of another person or project.
 
