@@ -50,38 +50,28 @@ By submitting a Contribution that is accepted and incorporated into AngOS, you g
 You represent that you have the necessary rights to submit the Contribution and that the Contribution does not knowingly violate the rights of another person or project.
 The Copyright Holder may also choose to distribute an accepted Contribution under another license or grant additional permissions for that Contribution.
 
-## 7. Third-Party Software
-
-AngOS may contain software or other material created by third parties.
-Third-party material is not automatically covered by this License.
-Third-party material remains subject to its original license or terms.
-
-AngOS aims to incorporate only third-party software that is either:
-* In the public domain; or
-* Released under the CC0 1.0 Universal license.
-
-## 8. Ownership
+## 7. Ownership
 
 This License does not transfer ownership or copyright of the original AngOS source code.
 Copyright in original AngOS material remains with the applicable Copyright Holder.
 Permission to use AngOS under this License does not grant ownership of AngOS or its original source code.
 
-## 9. Trademarks and Name
+## 8. Trademarks and Name
 
 This License does not grant permission to use the name **AngOS**, its logos, or other project branding to imply that a modified or redistributed version is an official version of AngOS.
 Permission to use the AngOS name or branding may be granted separately by the Copyright Holder.
 
-## 10. Termination
+## 9. Termination
 
 Your permissions under this License will automatically terminate if you violate the terms of this License.
 Permissions may be restored at the sole discretion of the Copyright Holder.
 
-## 11. Disclaimer of Warranty
+## 10. Disclaimer of Warranty
 
 AngOS is provided **"as is"**, without warranty of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, and non-infringement.
 The Copyright Holder shall not be liable for any claim, damages, or other liability arising from the use of AngOS.
 
-## 12. Acceptance
+## 11. Acceptance
 
 By using, modifying, or contributing to AngOS, you agree to the terms of this License.
 If you do not agree to these terms, you are not granted permission to use, modify, or contribute to AngOS beyond rights granted by applicable law.
