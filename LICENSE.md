@@ -20,16 +20,13 @@ For purposes of this License:
 
 "Contribution" means original work submitted to the AngOS project for possible inclusion in AngOS.
 
-## 2. Permission to Use
+## 2. Copyright License Grant
 
-Permission is granted to any person to:
-* View and study the AngOS source code.
-* Download and obtain copies of AngOS.
-* Use AngOS privately and for non-commercial purposes.
-* Modify AngOS for private and non-commercial purposes.
-* Create private derivative works based on AngOS for personal, educational, or experimental use.
+Subject to the terms and conditions of this License, the Copyright Holder grants you a limited, non-exclusive, royalty-free license to exercise the rights expressly permitted by this License.
 
-These permissions are granted free of charge, provided that the conditions of this License are followed.
+This license does not transfer ownership of AngOS or any copyright in AngOS to you.
+
+Except for the permissions expressly granted by this License, all rights in AngOS are reserved by the Copyright Holder.
 
 ## 3. Public Distribution
 
