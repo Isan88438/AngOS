@@ -3,6 +3,8 @@
 #include <globals.h>
 #include "paging.h"
 
+struct table pml4;
+
 #define PAGE_2M   0x200000ULL
 #define FIRST_4GB 0x100000000ULL
 
