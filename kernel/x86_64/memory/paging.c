@@ -154,13 +154,13 @@ void init_paging(void) {
 
         for (u64 addr = 0;
              addr < FIRST_4GB;
-             addr + = PAGE_2M) {
+             addr += PAGE_2M) {
                 map_2mb_page((void *)addr, (void *)addr);
         }
 
         for (size_t offset = 0;
              offset < kernel_size;
-             offset + = PAGE_SIZE) {
+             offset += PAGE_SIZE) {
                 map_page(
                         (void *)((u64)kernel_paddr + offset),
                         (void *)((u64)kernel_vaddr + offset)
@@ -173,7 +173,7 @@ void init_paging(void) {
 
                 for (size_t offset = 0;
                      offset < fb_size;
-                     offset + = PAGE_SIZE) {
+                     offset += PAGE_SIZE) {
                         map_page(
                                 (void *)((u64)fb_phys + offset),
                                 (void *)((u64)fb_virt + offset)
