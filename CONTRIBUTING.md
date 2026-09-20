@@ -132,7 +132,7 @@ AngOS aims to use only software that is:
 * Released under the **Zero Clause BSD (0BSD)** license
 * Released under the **MIT No Attribution (MIT-0)** license
 
-This policy is intended to keep third-party software used by AngOS compatible with the AngOS license.
+This policy is intended to keep **all** third-party software used by AngOS under the AngOS License so all rights are retained.
 
 ### Before submitting third-party code
 
