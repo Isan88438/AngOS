@@ -10,6 +10,7 @@
 #include <tosaithe.h>
 #include <terminal.h>
 #include <globals.h>
+#include "init.h"
 
 void init(tosaithe_loader_data *loader_data) {
         if (!loader_data || !loader_data->kern_map) {
