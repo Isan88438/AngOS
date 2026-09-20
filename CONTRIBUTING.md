@@ -4,8 +4,6 @@ Thank you for your interest in contributing to **AngOS**!
 
 You **do not need to be an OS expert** to contribute. If you're interested in operating systems, low-level programming, or simply want to learn, you're welcome to contribute!
 
----
-
 ## Ways to Contribute
 
 There are many ways to help AngOS. For example:
@@ -26,8 +24,6 @@ There are many ways to help AngOS. For example:
 * Ideas and feature proposals
 And many more!
 *(Practically anything that has to do with AngOS can be counted as a contribution!)*
-
----
 
 ## Getting Started
 
@@ -77,8 +73,6 @@ Once your changes are ready, open a Pull Request from your fork to the AngOS rep
 
 You don't need to have write access to AngOS to submit a Pull Request.
 
----
-
 ## Pull Requests
 
 Pull Requests are how changes are proposed to the main AngOS repository.
@@ -97,8 +91,6 @@ Opening a Pull Request does not guarantee that it will be merged.
 
 This allows anyone to contribute while keeping the official AngOS repository stable and allowing the project maintainers to decide what becomes part of AngOS.
 
----
-
 ## Issues
 
 If you find a bug, have an idea, or want to discuss something about AngOS, you can open an Issue.
@@ -115,8 +107,6 @@ For feature requests, explain:
 * What you want to add
 * Why it would be useful
 * How you think it could work, if you have an idea
-
----
 
 ## Third-Party Software
 
@@ -148,8 +138,6 @@ When in doubt, **ask before submitting the code**.
 
 Do not assume that code being publicly available on GitHub means that it can be freely incorporated into AngOS.
 
----
-
 ## Original Contributions
 
 By submitting original work to AngOS, contributors agree that their contributions may be incorporated into AngOS and distributed under the AngOS project's license.
@@ -157,8 +145,6 @@ By submitting original work to AngOS, contributors agree that their contribution
 Contributors grant AngOS permission to use, modify, combine, monetize, and redistribute their contributions as part of the project.
 
 Contributors must not submit work that they do not have the right to submit.
-
----
 
 ## Code and Changes
 
@@ -173,8 +159,6 @@ When contributing code:
 * Don't intentionally break existing functionality without a good reason.
 
 Because AngOS is in early development, existing code and APIs may change significantly.
-
----
 
 ## Not Sure Where to Start?
 
@@ -192,8 +176,6 @@ You don't have to wait until you're an expert.
 
 **AngOS is being built by people who want to learn, experiment, and create an operating system together.**
 
----
-
 ## Pull Request Checklist
 
 Before submitting a Pull Request, please check:
@@ -205,8 +187,6 @@ Before submitting a Pull Request, please check:
 * [ ] I have the right to submit the code.
 * [ ] I have explained anything that could be useful for reviewers.
 * [ ] I have updated relevant documentation, if necessary.
-
----
 
 ## Thank You!
 
