@@ -8,15 +8,10 @@
 #define FLAG_PRESENT (1ULL << 0)
 #define FLAG_RW      (1ULL << 1)
 #define FLAG_US      (1ULL << 2)
+#define FLAG_PS      (1ULL << 7)
 
 #define FLAGS        (FLAG_PRESENT | FLAG_RW | FLAG_US)
-#define ADDR_MASK    0x000ffffffffff000ULL
-
-struct table {
-        u64 entry[512];
-} __attribute__((aligned(4096)));
-
-extern struct table pml4;
+#define ADDR_MASK    0x000FFFFFFFFFF000ULL
 
 void map_page(void *phys, void *virt);
 void map_2mb_page(void *phys, void *virt);
