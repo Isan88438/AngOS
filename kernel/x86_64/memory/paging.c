@@ -3,9 +3,8 @@
 #include <globals.h>
 #include "paging.h"
 
-#define PAGE_2M      0x200000ULL
-#define FIRST_4GB    0x100000000ULL
-#define FLAG_PS      (1ULL << 7)
+#define PAGE_2M   0x200000ULL
+#define FIRST_4GB 0x100000000ULL
 
 static struct table *new_table(void) {
         void *page = phys_page_alloc();
@@ -134,6 +133,7 @@ void *find_physaddr(void *virt) {
 
         if (pd->entry[pd_idx] & FLAG_PS) {
                 u64 base = pd->entry[pd_idx] & ADDR_MASK;
+
                 return (void *)(base + (v & (PAGE_2M - 1)));
         }
 
@@ -150,21 +150,20 @@ void *find_physaddr(void *virt) {
 }
 
 void init_paging(void) {
-
         memset(&pml4, 0, sizeof(pml4));
 
-        for (u64 addr = 0; addr < FIRST_4GB; addr + = PAGE_2M)
+        for (u64 addr = 0;
+             addr < FIRST_4GB;
+             addr + = PAGE_2M) {
                 map_2mb_page((void *)addr, (void *)addr);
-
-        void *phys = kernel_paddr;
-        void *virt = kernel_vaddr;
+        }
 
         for (size_t offset = 0;
              offset < kernel_size;
              offset + = PAGE_SIZE) {
                 map_page(
-                        (void *)((u64)phys + offset),
-                        (void *)((u64)virt + offset)
+                        (void *)((u64)kernel_paddr + offset),
+                        (void *)((u64)kernel_vaddr + offset)
                 );
         }
 
@@ -189,18 +188,5 @@ void init_paging(void) {
         if (!pml4_phys)
                 return;
 
-        load_pml4(pml4_phys);
-}
-
-void init_malloc(void) {
-        freespace[0][0].addr = kernel_heap;
-        freespace[0][0].size = kernel_stack - kernel_heap;
-
-        freespace[1][0].addr = userspace_heap;
-        freespace[1][0].size = userspace_stack - userspace_heap;
-}
-
-void init_memory(void) {
-        init_paging();
-        init_malloc();
+        load_pml4((struct table *)pml4_phys);
 }
