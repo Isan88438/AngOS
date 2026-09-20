@@ -103,9 +103,13 @@ The Copyright Holder shall not be liable for any claim, damages, or other liabil
 
 ## 12. Acceptance
 
-By using, modifying, or contributing to AngOS, you agree to the terms of this License.
+The permissions granted by this License apply only to acts that are permitted under this License.
 
-If you do not agree to these terms, you are not granted permission to use, modify, or contribute to AngOS beyond rights granted by applicable law.
+By exercising rights granted by this License, you accept and agree to comply with its terms and conditions.
+
+If you do not agree to these terms, you may not exercise the permissions granted by this License, except to the extent that applicable law independently permits the relevant activity.
+
+Nothing in this section limits any rights that cannot lawfully be restricted by copyright law or other applicable law.
 
 ## 13. No Implied Rights
 
