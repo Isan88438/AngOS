@@ -1,330 +1,206 @@
-python - <<'PY'
-from pathlib import Path
-import re
-import shutil
+#include <stdlib.h>
+#include <string.h>
+#include <globals.h>
+#include "paging.h"
 
-memory_c = Path("kernel/memory/memory.c")
-memory_h = Path("kernel/include/memory.h")
-init_c = Path("kernel/x86_64/init.c")
+#define PAGE_2M      0x200000ULL
+#define FIRST_4GB    0x100000000ULL
+#define FLAG_PS      (1ULL << 7)
 
-for p in (memory_c, memory_h, init_c):
-    shutil.copy2(p, str(p) + ".before-phys-allocator")
+static struct table *new_table(void) {
+        void *page = phys_page_alloc();
 
-c = memory_c.read_text()
+        if (!page)
+                return 0;
 
-if '#include <tosaithe.h>' not in c:
-    c = c.replace(
-        '#include <syscall.h>\n',
-        '#include <syscall.h>\n#include <tosaithe.h>\n',
-        1
-    )
-
-new_phys_block = r'''
-#define MAX_PHYS_REGIONS 512
-
-typedef struct {
-        u64 base;
-        u64 pages;
-} phys_region_t;
-
-static phys_region_t managed_regions[MAX_PHYS_REGIONS];
-static phys_region_t free_regions[MAX_PHYS_REGIONS];
-
-static size_t managed_region_count;
-static size_t free_region_count;
-
-static u64 phys_total_pages;
-static u64 phys_free_pages_count;
-
-static void phys_sort_and_merge(phys_region_t *regions, size_t *count) {
-        for (size_t i = 1; i < *count; ++i) {
-                phys_region_t value = regions[i];
-                size_t j = i;
-
-                while (j > 0 && regions[j - 1].base > value.base) {
-                        regions[j] = regions[j - 1];
-                        --j;
-                }
-
-                regions[j] = value;
-        }
-
-        size_t out = 0;
-
-        for (size_t i = 0; i < *count; ++i) {
-                if (regions[i].pages == 0)
-                        continue;
-
-                if (out != 0) {
-                        u64 end =
-                                regions[out - 1].base +
-                                regions[out - 1].pages * PAGE_SIZE;
-
-                        if (end == regions[i].base) {
-                                regions[out - 1].pages += regions[i].pages;
-                                continue;
-                        }
-                }
-
-                regions[out++] = regions[i];
-        }
-
-        *count = out;
+        memset(page, 0, PAGE_SIZE);
+        return (struct table *)page;
 }
 
-static bool phys_managed(u64 addr) {
-        for (size_t i = 0; i < managed_region_count; ++i) {
-                u64 begin = managed_regions[i].base;
-                u64 end =
-                        begin +
-                        managed_regions[i].pages * PAGE_SIZE;
+static struct table *get_pdpt(u64 pml4_idx) {
+        if (!(pml4.entry[pml4_idx] & FLAG_PRESENT)) {
+                struct table *pdpt = new_table();
 
-                if (addr >= begin && addr < end)
-                        return true;
+                if (!pdpt)
+                        return 0;
+
+                pml4.entry[pml4_idx] =
+                        ((u64)pdpt & ADDR_MASK) | FLAGS;
         }
 
-        return false;
+        return (struct table *)(pml4.entry[pml4_idx] & ADDR_MASK);
 }
 
-static bool phys_free_already(u64 addr) {
-        for (size_t i = 0; i < free_region_count; ++i) {
-                u64 begin = free_regions[i].base;
-                u64 end =
-                        begin +
-                        free_regions[i].pages * PAGE_SIZE;
+static struct table *get_pd(struct table *pdpt, u64 pdpt_idx) {
+        if (!(pdpt->entry[pdpt_idx] & FLAG_PRESENT)) {
+                struct table *pd = new_table();
 
-                if (addr >= begin && addr < end)
-                        return true;
+                if (!pd)
+                        return 0;
+
+                pdpt->entry[pdpt_idx] =
+                        ((u64)pd & ADDR_MASK) | FLAGS;
         }
 
-        return false;
+        return (struct table *)(pdpt->entry[pdpt_idx] & ADDR_MASK);
 }
 
-static bool phys_insert_free_page(u64 addr) {
-        size_t pos = 0;
+void map_2mb_page(void *phys, void *virt) {
+        u64 p = (u64)phys;
+        u64 v = (u64)virt;
 
-        while (pos < free_region_count &&
-               free_regions[pos].base < addr)
-                ++pos;
-
-        if (pos > 0) {
-                phys_region_t *prev = &free_regions[pos - 1];
-                u64 prev_end =
-                        prev->base + prev->pages * PAGE_SIZE;
-
-                if (prev_end == addr) {
-                        ++prev->pages;
-
-                        if (pos < free_region_count &&
-                            addr + PAGE_SIZE == free_regions[pos].base) {
-                                prev->pages += free_regions[pos].pages;
-
-                                for (size_t i = pos;
-                                     i + 1 < free_region_count;
-                                     ++i) {
-                                        free_regions[i] = free_regions[i + 1];
-                                }
-
-                                --free_region_count;
-                        }
-
-                        return true;
-                }
-        }
-
-        if (pos < free_region_count &&
-            addr + PAGE_SIZE == free_regions[pos].base) {
-                free_regions[pos].base = addr;
-                ++free_regions[pos].pages;
-                return true;
-        }
-
-        if (free_region_count >= MAX_PHYS_REGIONS)
-                return false;
-
-        for (size_t i = free_region_count; i > pos; --i)
-                free_regions[i] = free_regions[i - 1];
-
-        free_regions[pos].base = addr;
-        free_regions[pos].pages = 1;
-        ++free_region_count;
-
-        return true;
-}
-
-void phys_memory_init(const tosaithe_loader_data *loader_data) {
-        managed_region_count = 0;
-        free_region_count = 0;
-        phys_total_pages = 0;
-        phys_free_pages_count = 0;
-
-        if (!loader_data || !loader_data->memmap)
+        if ((p & (PAGE_2M - 1)) || (v & (PAGE_2M - 1)))
                 return;
 
-        for (u32 i = 0; i < loader_data->memmap_entries; ++i) {
-                const tsbp_mmap_entry *entry = &loader_data->memmap[i];
+        unsigned pml4_idx = (v >> 39) & 0x1FF;
+        unsigned pdpt_idx = (v >> 30) & 0x1FF;
+        unsigned pd_idx   = (v >> 21) & 0x1FF;
 
-                if (entry->type != 0)
-                        continue;
-
-                u64 begin = (u64)entry->base;
-                u64 end = begin + (u64)entry->length;
-
-                begin = (begin + PAGE_SIZE - 1) & ~(u64)(PAGE_SIZE - 1);
-                end &= ~(u64)(PAGE_SIZE - 1);
-
-                if (end <= begin)
-                        continue;
-
-                if (begin == 0) {
-                        if (end <= PAGE_SIZE)
-                                continue;
-
-                        begin = PAGE_SIZE;
-                }
-
-                u64 pages = (end - begin) / PAGE_SIZE;
-
-                if (managed_region_count >= MAX_PHYS_REGIONS)
-                        break;
-
-                managed_regions[managed_region_count].base = begin;
-                managed_regions[managed_region_count].pages = pages;
-                ++managed_region_count;
-        }
-
-        phys_sort_and_merge(managed_regions, &managed_region_count);
-
-        for (size_t i = 0; i < managed_region_count; ++i) {
-                free_regions[free_region_count++] = managed_regions[i];
-                phys_total_pages += managed_regions[i].pages;
-        }
-
-        free_region_count = managed_region_count;
-        phys_free_pages_count = phys_total_pages;
-}
-
-void *phys_page_alloc(void) {
-        for (size_t i = 0; i < free_region_count; ++i) {
-                phys_region_t *region = &free_regions[i];
-
-                if (region->pages == 0)
-                        continue;
-
-                u64 addr = region->base;
-
-                region->base += PAGE_SIZE;
-                --region->pages;
-
-                if (region->pages == 0) {
-                        for (size_t j = i;
-                             j + 1 < free_region_count;
-                             ++j) {
-                                free_regions[j] = free_regions[j + 1];
-                        }
-
-                        --free_region_count;
-                }
-
-                --phys_free_pages_count;
-                return (void *)addr;
-        }
-
-        return 0;
-}
-
-void phys_page_free(void *addr) {
-        u64 page = (u64)addr;
-
-        if (page == 0 || (page & (PAGE_SIZE - 1)) != 0)
+        struct table *pdpt = get_pdpt(pml4_idx);
+        if (!pdpt)
                 return;
 
-        if (!phys_managed(page))
+        struct table *pd = get_pd(pdpt, pdpt_idx);
+        if (!pd)
                 return;
 
-        if (phys_free_already(page))
+        pd->entry[pd_idx] =
+                (p & ADDR_MASK) | FLAGS | FLAG_PS;
+}
+
+void map_page(void *phys, void *virt) {
+        u64 p = (u64)phys;
+        u64 v = (u64)virt;
+
+        if ((p & (PAGE_SIZE - 1)) || (v & (PAGE_SIZE - 1)))
                 return;
 
-        if (!phys_insert_free_page(page))
+        unsigned pml4_idx = (v >> 39) & 0x1FF;
+        unsigned pdpt_idx = (v >> 30) & 0x1FF;
+        unsigned pd_idx   = (v >> 21) & 0x1FF;
+        unsigned pt_idx   = (v >> 12) & 0x1FF;
+
+        struct table *pdpt = get_pdpt(pml4_idx);
+        if (!pdpt)
                 return;
 
-        ++phys_free_pages_count;
-}
+        struct table *pd = get_pd(pdpt, pdpt_idx);
+        if (!pd)
+                return;
 
-u64 phys_memory_total_pages(void) {
-        return phys_total_pages;
-}
+        if (pd->entry[pd_idx] & FLAG_PS)
+                return;
 
-u64 phys_memory_free_pages(void) {
-        return phys_free_pages_count;
-}
+        struct table *pt;
 
-'''
+        if (!(pd->entry[pd_idx] & FLAG_PRESENT)) {
+                pt = new_table();
 
-pattern = re.compile(
-    r'/\*\s*\n\s*Sets a page as used in the physical memory bitmap.*?'
-    r'/\*\s*\n\s*Combines contiguous free spaces',
-    re.S
-)
+                if (!pt)
+                        return;
 
-replacement = new_phys_block + '\n/*\n * Combines contiguous free spaces'
-
-c2, n = pattern.subn(replacement, c, count=1)
-
-if n != 1:
-    raise SystemExit("ERROR: could not locate old physical allocator block")
-
-memory_c.write_text(c2)
-
-h = memory_h.read_text()
-
-insert = '''
-void phys_memory_init(const struct tosaithe_loader_data *loader_data);
-u64 phys_memory_total_pages(void);
-u64 phys_memory_free_pages(void);
-'''
-
-if 'void phys_memory_init(' not in h:
-    h = h.replace('\n#endif\n', insert + '\n#endif\n', 1)
-
-if '#include <tosaithe.h>' not in h:
-    h = h.replace('#include <types.h>\n', '#include <types.h>\n#include <tosaithe.h>\n', 1)
-
-memory_h.write_text(h)
-
-i = init_c.read_text()
-
-needle = '''    terminal_init();
-
-    terminal_write("ANGOS KERNEL STARTED\\n");
-'''
-
-replacement_init = '''    terminal_init();
-
-    terminal_write("ANGOS KERNEL STARTED\\n");
-
-    phys_memory_init(loader_data);
-
-    if (phys_memory_total_pages() != 0) {
-        void *test_page = phys_page_alloc();
-
-        if (test_page) {
-            phys_page_free(test_page);
-            terminal_write("PHYSICAL MEMORY OK\\n");
+                pd->entry[pd_idx] =
+                        ((u64)pt & ADDR_MASK) | FLAGS;
         } else {
-            terminal_write("PHYSICAL MEMORY FAILED\\n");
+                pt = (struct table *)(pd->entry[pd_idx] & ADDR_MASK);
         }
-    } else {
-        terminal_write("NO USABLE MEMORY\\n");
-    }
-'''
 
-if needle not in i:
-    raise SystemExit("ERROR: init.c insertion point not found")
+        pt->entry[pt_idx] =
+                (p & ADDR_MASK) | FLAGS;
+}
 
-i = i.replace(needle, replacement_init, 1)
+void *find_physaddr(void *virt) {
+        u64 v = (u64)virt;
 
-init_c.write_text(i)
+        unsigned pml4_idx = (v >> 39) & 0x1FF;
+        unsigned pdpt_idx = (v >> 30) & 0x1FF;
+        unsigned pd_idx   = (v >> 21) & 0x1FF;
+        unsigned pt_idx   = (v >> 12) & 0x1FF;
 
-print("Physical allocator patch applied successfully.")
-PY
+        if (!(pml4.entry[pml4_idx] & FLAG_PRESENT))
+                return 0;
+
+        struct table *pdpt =
+                (struct table *)(pml4.entry[pml4_idx] & ADDR_MASK);
+
+        if (!(pdpt->entry[pdpt_idx] & FLAG_PRESENT))
+                return 0;
+
+        struct table *pd =
+                (struct table *)(pdpt->entry[pdpt_idx] & ADDR_MASK);
+
+        if (!(pd->entry[pd_idx] & FLAG_PRESENT))
+                return 0;
+
+        if (pd->entry[pd_idx] & FLAG_PS) {
+                u64 base = pd->entry[pd_idx] & ADDR_MASK;
+                return (void *)(base + (v & (PAGE_2M - 1)));
+        }
+
+        struct table *pt =
+                (struct table *)(pd->entry[pd_idx] & ADDR_MASK);
+
+        if (!(pt->entry[pt_idx] & FLAG_PRESENT))
+                return 0;
+
+        return (void *)(
+                (pt->entry[pt_idx] & ADDR_MASK) +
+                (v & (PAGE_SIZE - 1))
+        );
+}
+
+void init_paging(void) {
+
+        memset(&pml4, 0, sizeof(pml4));
+
+        for (u64 addr = 0; addr < FIRST_4GB; addr + = PAGE_2M)
+                map_2mb_page((void *)addr, (void *)addr);
+
+        void *phys = kernel_paddr;
+        void *virt = kernel_vaddr;
+
+        for (size_t offset = 0;
+             offset < kernel_size;
+             offset + = PAGE_SIZE) {
+                map_page(
+                        (void *)((u64)phys + offset),
+                        (void *)((u64)virt + offset)
+                );
+        }
+
+        if (fb_addr && fb_size) {
+                void *fb_phys = fb_addr;
+                void *fb_virt = (void *)0x8000000000ULL;
+
+                for (size_t offset = 0;
+                     offset < fb_size;
+                     offset + = PAGE_SIZE) {
+                        map_page(
+                                (void *)((u64)fb_phys + offset),
+                                (void *)((u64)fb_virt + offset)
+                        );
+                }
+
+                fb_addr = fb_virt;
+        }
+
+        void *pml4_phys = find_physaddr(&pml4);
+
+        if (!pml4_phys)
+                return;
+
+        load_pml4(pml4_phys);
+}
+
+void init_malloc(void) {
+        freespace[0][0].addr = kernel_heap;
+        freespace[0][0].size = kernel_stack - kernel_heap;
+
+        freespace[1][0].addr = userspace_heap;
+        freespace[1][0].size = userspace_stack - userspace_heap;
+}
+
+void init_memory(void) {
+        init_paging();
+        init_malloc();
+}
