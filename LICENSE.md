@@ -107,6 +107,49 @@ By using, modifying, or contributing to AngOS, you agree to the terms of this Li
 
 If you do not agree to these terms, you are not granted permission to use, modify, or contribute to AngOS beyond rights granted by applicable law.
 
+## 13. No Implied Rights
+
+No rights, permissions, or licenses are granted under this License except those expressly stated in this License.
+
+No permission to publicly distribute, commercially use, sublicense, sell, modify for public distribution, or otherwise exploit AngOS is granted by implication, estoppel, or otherwise.
+
+Any additional permission must be expressly granted by the Copyright Holder in writing.
+
+## 14. Hardware Distribution
+
+Pre-installing, bundling, packaging, or otherwise distributing AngOS with hardware or a physical product constitutes public distribution and, where applicable, commercial use.
+
+No person or organization may distribute AngOS pre-installed or bundled with hardware without prior written permission from the Copyright Holder.
+
+The Copyright Holder may grant hardware distribution rights under a separate agreement or commercial license.
+
+## 15. Official Versions
+
+Only releases designated and published by the Copyright Holder may be represented as official versions of AngOS.
+
+A modified, forked, or redistributed version of AngOS may not be represented as an official AngOS release without prior written permission from the Copyright Holder.
+
+## 16. Public Forks and Derivative Distributions
+
+Private modifications are permitted as described in this License.
+
+Publicly distributed forks, derivatives, or modified distributions of AngOS require prior written permission from the Copyright Holder.
+
+Permission to create a private modification does not grant permission to publish, distribute, or commercialize that modification.
+
+## 17. Authorized Derivatives
+
+Where the Copyright Holder grants permission to create or distribute a modified or derivative version of AngOS, the applicable permission or separate agreement may specify the licensing, distribution, branding, and commercial conditions applicable to that derivative version.
+
+## 18. License Changes
+
+The Copyright Holder may publish new versions of this License or modify the terms under which future versions of AngOS are distributed.
+
+Unless otherwise stated, a new version of AngOS will be distributed under the license identified with that release.
+
+Versions of AngOS previously distributed under an earlier version of this License remain subject to the terms applicable to those versions.
+
+
 ---
 
 **AngOS License Version 1.0**
