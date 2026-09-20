@@ -1,51 +1,81 @@
 #include <stdlib.h>
+#include <string.h>
 #include <cpu/GDT.h>
 #include <cpu/IO.h>
 #include <cpu/IDT.h>
 #include <cpu/PIT.h>
 #include <memory.h>
 #include <types.h>
-#include "init.h"
 #include <syscall.h>
 #include <tosaithe.h>
 #include <terminal.h>
+#include <globals.h>
 
 void init(tosaithe_loader_data *loader_data) {
-    fb_addr = loader_data->framebuffer_addr;
-    fb_size = loader_data->framebuffer_size;
-    fb_w = loader_data->framebuffer_width;
-    fb_h = loader_data->framebuffer_height;
-    fb_pixperline = loader_data->framebuffer_pitch;
-
-    terminal_init();
-
-    terminal_write("ANGOS KERNEL STARTED\n");
-
-    phys_memory_init(loader_data);
-
-    if (phys_memory_total_pages() != 0) {
-        void *test_page = phys_page_alloc();
-
-        if (test_page) {
-            phys_page_free(test_page);
-            terminal_write("PHYSICAL MEMORY OK\n");
-        } else {
-            terminal_write("PHYSICAL MEMORY FAILED\n");
+        if (!loader_data || !loader_data->kern_map) {
+                return;
         }
-    } else {
-        terminal_write("NO USABLE MEMORY\n");
-    }
-    terminal_write("INITIALIZING HARDWARE\n");
 
-    init_gdt();
-    terminal_write("GDT OK\n");
+        fb_addr = loader_data->framebuffer_addr;
+        fb_size = loader_data->framebuffer_size;
+        fb_w = loader_data->framebuffer_width;
+        fb_h = loader_data->framebuffer_height;
+        fb_pixperline = loader_data->framebuffer_pitch;
 
-    init_idt();
-    terminal_write("IDT OK\n");
+        u64 lowest_vaddr = ~0ULL;
+        u64 highest_vaddr = 0;
+        u64 lowest_paddr = 0;
 
-    init_timer();
-    terminal_write("PIT OK\n");
+        for (u32 i = 0; i < loader_data->kern_map_entries; ++i) {
+                const tsbp_kernel_mapping *mapping =
+                        &loader_data->kern_map[i];
 
-    terminal_write("TERMINAL OK\n");
-    terminal_write("ANGOS IS RUNNING\n");
+                if (mapping->base_virt < lowest_vaddr) {
+                        lowest_vaddr = mapping->base_virt;
+                        lowest_paddr = mapping->base_phys;
+                }
+
+                u64 end =
+                        mapping->base_virt +
+                        mapping->length;
+
+                if (end > highest_vaddr)
+                        highest_vaddr = end;
+        }
+
+        kernel_vaddr = (void *)lowest_vaddr;
+        kernel_paddr = (void *)lowest_paddr;
+        kernel_size = highest_vaddr - lowest_vaddr;
+
+        terminal_init();
+
+        terminal_write("ANGOS KERNEL STARTED\n");
+        terminal_write("PHYSICAL MEMORY INITIALIZING\n");
+
+        phys_memory_init(loader_data);
+        terminal_write("PHYSICAL MEMORY OK\n");
+
+        init_gdt();
+        terminal_write("GDT OK\n");
+
+        init_memory();
+        terminal_write("PAGING OK\n");
+
+        init_idt();
+        terminal_write("IDT OK\n");
+
+        init_timer();
+        terminal_write("PIT OK\n");
+
+        void *test = malloc(8192);
+
+        if (test) {
+                memset(test, 0xA5, 8192);
+                terminal_write("KERNEL HEAP OK\n");
+                free(test);
+        } else {
+                terminal_write("KERNEL HEAP FAILED\n");
+        }
+
+        terminal_write("ANGOS IS RUNNING\n");
 }
