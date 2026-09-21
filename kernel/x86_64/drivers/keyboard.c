@@ -1,21 +1,11 @@
 #include <types.h>
+#include <stdbool.h>
 #include <cpu/IO.h>
 #include <cpu/IDT.h>
 #include <terminal.h>
 #include <keyboard.h>
 
-/*
- * PS/2 keyboard, Set 1 scancodes.
- *
- * For this first version we only:
- *   - read IRQ1
- *   - receive scancodes
- *   - ignore key releases
- *   - translate basic printable keys
- *
- * Character translation will be expanded after the interrupt path
- * is confirmed stable.
- */
+extern void piceoi(bool isslave);
 
 static const char keymap[128] = {
     [0x02] = '1',
@@ -63,40 +53,28 @@ static const char keymap[128] = {
 
 static void keyboard_interrupt(void)
 {
-    /*
-     * Only read the keyboard data port when the output-buffer
-     * status bit says data is available.
-     */
-    if (!(inb(0x64) & 0x01))
-        return;
-
     u8 scancode = inb(0x60);
 
     /*
-     * Ignore key releases for now.
+     * Ignore key-release scancodes.
      */
-    if (scancode & 0x80)
-        return;
+    if (!(scancode & 0x80)) {
+        if (scancode < 128) {
+            char c = keymap[scancode];
+
+            if (c != 0)
+                terminal_putchar(c);
+        }
+    }
 
     /*
-     * Ignore extended keys for now.
+     * IRQ1 came from the master PIC.
      */
-    if (scancode == 0xE0)
-        return;
-
-    if (scancode < 128) {
-        char c = keymap[scancode];
-
-        if (c != 0)
-            terminal_putchar(c);
-    }
+    piceoi(false);
 }
 
 void keyboard_init(void)
 {
-    /*
-     * IRQ1 -> PIC vector 0x21.
-     */
     addirq(0x21, (void *)keyboard_interrupt, 0x8E);
     unmaskirq(1);
 
