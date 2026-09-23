@@ -95,3 +95,8 @@ void keyboard_handler(void) {
 
     outb(0x20, 0x20); // Send EOI
 }
+
+__attribute__((interrupt)) void irq1_stub(void *frame) {
+    (void)frame;
+    keyboard_handler();
+}
