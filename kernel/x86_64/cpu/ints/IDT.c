@@ -3,6 +3,8 @@
 #include <cpu/IDT.h>
 #define INTS 0x30
 
+extern void irq1_stub(void);
+
 typedef struct {
 	u16 size;
 	void *offset;
