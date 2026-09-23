@@ -1,61 +1,36 @@
-#include <types.h>
-#include <tosaithe.h>
+#include <keyboard.h>
+#include <terminal.h>
+#include <string.h>
+#include <stdio.h>
 
-extern void init(tosaithe_loader_data *loader_data);
-
-static u8 kernel_stack[16384] __attribute__((aligned(16)));
-
-__attribute__((section(".tsbp"), used))
-const tosaithe_entry_header angos_tsbp_header = {
-    .signature = 0x50425354,
-    .version = 1,
-    .min_reqd_version = 1,
-    .flags = 0,
-    .stack_ptr = (uintptr_t)(kernel_stack + sizeof(kernel_stack))
-};
-
-void angos_entry(tosaithe_loader_data *loader_data) {
-    init(loader_data);
-
-    for (;;) {
-        asm volatile ("hlt");
+void execute_command(const char *cmd) {
+    if (strcmp(cmd, "help") == 0) {
+        printf("AngOS Built-in Commands:\n");
+        printf("  help     - Show available commands\n");
+        printf("  clear    - Clear terminal screen\n");
+        printf("  ver      - Display OS kernel version\n");
+        printf("  reboot   - Reboot system\n");
+    } else if (strcmp(cmd, "clear") == 0) {
+        terminal_clear();
+    } else if (strcmp(cmd, "ver") == 0) {
+        printf("AngOS v0.1.0 (x86_64 Architecture)\n");
+    } else if (strcmp(cmd, "reboot") == 0) {
+        printf("Rebooting system...\n");
+        outb(0x64, 0xFE); // Pulse CPU reset line via 8042 controller
+    } else if (cmd[0] != '\0') {
+        printf("Unknown command: '%s'. Type 'help' for commands.\n", cmd);
     }
 }
 
-[bits 64]
-global irq1_stub
-extern keyboard_handler
+void kernel_main(void) {
+    char input_buf[128];
 
-irq1_stub:
-    push rbx
-    push rcx
-    push rdx
-    push rbp
-    push rdi
-    push rsi
-    push r8
-    push r9
-    push r10
-    push r11
-    push r12
-    push r13
-    push r14
-    push r15
+    printf("\n=== AngOS Command Shell ===\n");
+    printf("Type 'help' to get started.\n\n");
 
-    call keyboard_handler
-
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop r11
-    pop r10
-    pop r9
-    pop r8
-    pop rsi
-    pop rdi
-    pop rbp
-    pop rdx
-    pop rcx
-    pop rbx
-    iretq
+    while (1) {
+        printf("angos> ");
+        keyboard_gets(input_buf, sizeof(input_buf));
+        execute_command(input_buf);
+    }
+}
