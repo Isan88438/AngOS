@@ -1,6 +1,8 @@
 #include <types.h>
 #include <syscall.h>
 #include <cpu/IDT.h>
+#include <keyboard.h>
+
 #define INTS 0x30
 
 extern void irq1_stub(void);
@@ -144,34 +146,41 @@ void addirq(u8 entry, void *offset, u8 type) {
 }
 
 void init_idt() {
-	u8 i;
-	for (i = 0; i < 0x20; ++i)
-		addirq(i, general_fault, 0x8F);
-	for (i = 0x20; i < 0x28; ++i)
-		addirq(i, nop_master, 0x8E);
-	for (i = 0x28; i < 0x30; ++i)
-		addirq(i, nop_slave, 0x8E);
-	addirq(0x0, div_0_fault, 0x8F);
-	addirq(0x1, debug_fault, 0x8F);
-	addirq(0x2, non_maskable_interrupt, 0x8F);
-	addirq(0x3, breakpoint_fault, 0x8F);
-	addirq(0x4, overflow_fault, 0x8F);
-	addirq(0x5, bound_fault, 0x8F);
-	addirq(0x6, inv_opcode_fault, 0x8F);
-	addirq(0x7, no_device_fault, 0x8F);
-	addirq(0x8, double_fault, 0x8F);
-	addirq(0xA, inv_tss_fault, 0x8F);
-	addirq(0xB, no_segment_fault, 0x8F);
-	addirq(0xC, stack_fault, 0x8F);
-	addirq(0xD, gp_fault, 0x8F);
-	addirq(0xE, page_fault, 0x8F);
+    u8 i;
+    for (i = 0; i < 0x20; ++i)
+        addirq(i, general_fault, 0x8F);
+    for (i = 0x20; i < 0x28; ++i)
+        addirq(i, nop_master, 0x8E);
+    for (i = 0x28; i < 0x30; ++i)
+        addirq(i, nop_slave, 0x8E);
 
-	remappic(0x20, 0x28);
+    addirq(0x0, div_0_fault, 0x8F);
+    addirq(0x1, debug_fault, 0x8F);
+    addirq(0x2, non_maskable_interrupt, 0x8F);
+    addirq(0x3, breakpoint_fault, 0x8F);
+    addirq(0x4, overflow_fault, 0x8F);
+    addirq(0x5, bound_fault, 0x8F);
+    addirq(0x6, inv_opcode_fault, 0x8F);
+    addirq(0x7, no_device_fault, 0x8F);
+    addirq(0x8, double_fault, 0x8F);
+    addirq(0xA, inv_tss_fault, 0x8F);
+    addirq(0xB, no_segment_fault, 0x8F);
+    addirq(0xC, stack_fault, 0x8F);
+    addirq(0xD, gp_fault, 0x8F);
+    addirq(0xE, page_fault, 0x8F);
 
-	IDTP.offset = IDT;
-	IDTP.size = sizeof(IDT) - 1;
+    // Overwrite vector 0x21 (IRQ1 - Keyboard) with irq1_stub
+    addirq(0x21, irq1_stub, 0x8E);
 
-	__asm__("lidt (%0)" :: "r"(&IDTP));
+    remappic(0x20, 0x28);
 
-	__asm__("sti; nop; nop");
+    IDTP.offset = IDT;
+    IDTP.size = sizeof(IDT) - 1;
+
+    __asm__("lidt (%0)" :: "r"(&IDTP));
+
+    // Unmask IRQ1 on the PIC before enabling CPU interrupts
+    keyboard_init();
+
+    __asm__("sti; nop; nop");
 }
