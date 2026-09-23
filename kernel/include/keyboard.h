@@ -14,5 +14,6 @@ void keyboard_handler(void);
 bool keyboard_has_char(void);
 char keyboard_getchar(void);
 void keyboard_gets(char *buf, size_t max_len);
+void irq1_stub(void);
 
 #endif
