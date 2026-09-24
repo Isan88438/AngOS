@@ -98,6 +98,20 @@ void terminal_putchar(char c) {
         return;
     }
 
+    if (c == '\b') {
+    if (cursor_x >= CHAR_W)
+        cursor_x -= CHAR_W;
+
+    for (u32 gy = 0; gy < GLYPH_H; ++gy) {
+        pixel_t *row = row_ptr((u32)(cursor_y + gy));
+
+        for (u32 gx = 0; gx < GLYPH_W; ++gx)
+            row[cursor_x + gx] = BG;
+    }
+
+    return;
+    }
+
     if (cursor_x + GLYPH_W > fb_w) {
         cursor_x = 0;
         cursor_y += CHAR_H;
