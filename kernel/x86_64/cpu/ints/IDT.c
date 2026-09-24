@@ -178,9 +178,4 @@ void init_idt() {
     IDTP.size = sizeof(IDT) - 1;
 
     __asm__("lidt (%0)" :: "r"(&IDTP));
-
-    // Unmask IRQ1 on the PIC before enabling CPU interrupts
-    keyboard_init();
-
-    __asm__("sti; nop; nop");
 }
