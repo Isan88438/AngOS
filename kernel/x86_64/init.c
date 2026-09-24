@@ -82,3 +82,9 @@ void init(tosaithe_loader_data *loader_data) {
 
         terminal_write("ANGOS IS RUNNING\n");
 }
+
+void kernel_main(void);
+
+void angos_entry(void) {
+    kernel_main();
+}
