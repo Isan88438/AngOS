@@ -5,7 +5,7 @@
 
 #define INTS 0x30
 
-extern void irq1_stub(void);
+#include <keyboard.h>
 
 typedef struct {
 	u16 size;
