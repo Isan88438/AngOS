@@ -23,8 +23,13 @@ SECTIONS
 
     .bss ALIGN(0x1000) :
     {
-        *(COMMON)
-        *(.bss .bss.*)
+    *(COMMON)
+    *(.bss .bss.*)
+
+    . = ALIGN(0x1000);
+    angos_stack_bottom = .;
+    . += 0x10000;
+    angos_stack_top = .;
     }
 
     /DISCARD/ :
