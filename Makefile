@@ -65,7 +65,7 @@ $(BUILD)/%.o: kernel/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD)/%_asm.o: kernel/%.S
+$(BUILD)/%_asm.o: kernel/%.s
 	@mkdir -p $(dir $@)
 	$(AS) $(ASFLAGS) -c $< -o $@
 
