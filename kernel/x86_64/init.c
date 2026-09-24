@@ -63,22 +63,20 @@ void init(tosaithe_loader_data *loader_data) {
         init_memory();
         terminal_write("PAGING OK\n");
 
-        init_idt();
-        terminal_write("IDT OK\n");
-        keyboard_init();
-
         init_timer();
         terminal_write("PIT OK\n");
 
         void *test = malloc(8192);
 
         if (test) {
-                memset(test, 0xA5, 8192);
-                terminal_write("KERNEL HEAP OK\n");
-                free(test);
+        memset(test, 0xA5, 8192);
+        terminal_write("KERNEL HEAP OK\n");
+        free(test);
         } else {
-                terminal_write("KERNEL HEAP FAILED\n");
+        terminal_write("KERNEL HEAP FAILED\n");
         }
 
         terminal_write("ANGOS IS RUNNING\n");
+
+        __asm__ volatile("sti");
 }
