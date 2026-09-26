@@ -2,6 +2,8 @@
 #include <cpu/IO.h>
 #include <terminal.h>
 
+extern void piceoi(bool isslave);
+
 static bool shift_pressed = false;
 static bool caps_lock = false;
 
@@ -92,8 +94,8 @@ void keyboard_handler(void) {
             }
         }
     }
-
     outb(0x20, 0x20); // Send EOI
+    piceoi(false);
 }
 
 __attribute__((interrupt)) void irq1_stub(void *frame) {
